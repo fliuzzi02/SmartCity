@@ -1,7 +1,9 @@
 package example;
 
+import utils.Logger;
+
 public class Example {
     public static void main(String[] args) {
-        System.out.println("Hello, World! Provided arguments: " + String.join(", ", args));
+        Logger.info("Example", "Hello, World! Provided arguments: " + String.join(", ", args));
     }
 }
