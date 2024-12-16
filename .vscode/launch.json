@@ -1,0 +1,32 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    // To add launch config use this template:
+    // {
+    //     "type": "java",
+    //     "name": "NameOfTheConfig",
+    //     "request": "launch",
+    //     "mainClass": "mainClassPackage.mainClassName",
+    //     "projectName": "projectName",
+    //     "args": ["arg1", "arg2"]
+    // },
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Example",
+            "request": "launch",
+            "mainClass": "example.Example",
+            "projectName": "SmartCity",
+            "args": ["arg1", "arg2"]
+        }
+    ]
+}
