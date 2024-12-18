@@ -7,6 +7,7 @@ import java.util.Calendar;
  * Logger class for logging messages with different levels of severity.
  */
 public class Logger {
+	// TODO: Add color to messages
 	
 	public static final int sender_spacing = 17;
 	
