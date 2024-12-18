@@ -22,8 +22,8 @@ public class Logger {
 
 	/**
 	 * Method for logging debug messages.
-	 * @param sender
-	 * @param msg
+	 * @param sender - the name of the class or object that calls the method
+	 * @param msg - the message to be logged
 	 */
 	public static void debug(String sender, String msg) {
 		System.out.println(putCurrentTimestamp() + " DEBUG [" + formatWithSpaces(sender,sender_spacing) + "] " + msg);
@@ -61,11 +61,9 @@ public class Logger {
 			return msg;
 
 		int n = size - msg.length();
-		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < n; i++) builder.append(" ");
-		builder.append(msg);
 
-		return builder.toString();
+		return " ".repeat(n) +
+				msg;
 	}
 	
 	protected static String putCurrentTimestamp() {
