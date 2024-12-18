@@ -1,6 +1,6 @@
-package example;
+package main.java.example;
 
-import utils.Logger;
+import main.java.utils.Logger;
 
 public class Example {
     public static void main(String[] args) {
