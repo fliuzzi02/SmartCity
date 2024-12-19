@@ -22,6 +22,10 @@ public abstract class Device {
         this.connection = new MQTTClient(this, brokerAddress);
     }
 
+    protected void connect(String brokerAddress, String username, String password) throws MqttException {
+        this.connection = new MQTTClient(this, brokerAddress, username, password);
+    }
+
     /**
      * This method is called when a message is received
      * @param topic where the message was received

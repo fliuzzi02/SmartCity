@@ -29,6 +29,22 @@ public class MQTTClient implements MqttCallback {
         Logger.info(clientId, "Connected to broker at " + this.address);
     }
 
+    // TODO: Do this better maybe with optional fields
+    MQTTClient(Device mydevice, String brokerAddress, String username, String password) throws MqttException {
+        this.myDevice = mydevice;
+        this.address = brokerAddress;
+        // Client id is the device id plus a random short UUID
+        this.clientId = myDevice.id + "-" + UUID.randomUUID().toString().substring(0, 5);
+        this.client = new MqttClient(this.address, this.clientId);
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setCleanSession(true);
+        options.setUserName(username);
+        options.setPassword(password.toCharArray());
+        this.client.setCallback(this);
+        this.client.connect(options);
+        Logger.info(clientId, "Connected to broker at " + this.address);
+    }
+
     /**
      * This method allows the client to subscribe to the specified topic
      * @param topic where to subscribe
