@@ -1,6 +1,6 @@
 package main.java.device;
 
-import main.java.utils.ConnOptions;
+import main.java.utils.GlobalVars;
 import main.java.utils.Logger;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONObject;
@@ -42,13 +42,11 @@ public class InfoPanel extends Device{
     }
 
     @Override
-    protected void connect(String brokerAddress) throws MqttException {
-        super.connect(brokerAddress);
-    }
-
-    @Override
-    protected void connect(String brokerAddress, String username, String password) throws MqttException {
-        super.connect(brokerAddress, username, password);
+    public void init() throws MqttException {
+        this.connect(GlobalVars.BROKER_ADDRESS, GlobalVars.USERNAME, GlobalVars.PASSWORD);
+        this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/info");
+        this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/alerts");
+        this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/traffic");
     }
 
     @Override
@@ -133,12 +131,9 @@ public class InfoPanel extends Device{
     }
 
     public static void main(String[] args) {
-        InfoPanel panel = new InfoPanel("Panel1", "R1s1", 1500);
+        InfoPanel panel = new InfoPanel(args[0], args[1], Integer.parseInt(args[2]));
         try {
-            panel.connect(ConnOptions.BROKER_ADDRESS, ConnOptions.USERNAME, ConnOptions.PASSWORD);
-            panel.connection.subscribe(ConnOptions.BASE_TOPIC + "/road/" + panel.roadSegment + "/info");
-            panel.connection.subscribe(ConnOptions.BASE_TOPIC + "/road/" + panel.roadSegment + "/alerts");
-            panel.connection.subscribe(ConnOptions.BASE_TOPIC + "/road/" + panel.roadSegment + "/traffic");
+            panel.init();
         } catch (MqttException e) {
             Logger.error(panel.id, "An error occurred: " + e.getMessage());
         }

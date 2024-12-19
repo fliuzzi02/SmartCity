@@ -27,6 +27,14 @@
             "mainClass": "main.java.example.Example",
             "projectName": "SmartCity",
             "args": ["arg1", "arg2"]
+        },
+        {
+            "type": "java",
+            "name": "Panel1",
+            "request": "launch",
+            "mainClass": "main.java.device.InfoPanel",
+            "projectName": "SmartCity",
+            "args": ["Panel1", "R1s1", 1500]
         }
     ]
 }

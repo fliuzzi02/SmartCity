@@ -49,7 +49,7 @@ public class MQTTClient implements MqttCallback {
      * This method allows the client to subscribe to the specified topic
      * @param topic where to subscribe
      */
-    protected void subscribe(String topic) throws MqttException {
+    public void subscribe(String topic) throws MqttException {
         this.client.subscribe(topic);
         Logger.info(clientId, "Subscribed to " + topic);
     }
@@ -59,7 +59,7 @@ public class MQTTClient implements MqttCallback {
      * @param topic where to publish
      * @param payload the message to publish
      */
-    protected void publish(String topic, JSONObject payload) throws MqttException {
+    public void publish(String topic, JSONObject payload) throws MqttException {
         MqttMessage message = new MqttMessage(payload.toString().getBytes());
         message.setQos(0);
         this.client.publish(topic, message);

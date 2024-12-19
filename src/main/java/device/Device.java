@@ -7,16 +7,21 @@ import org.json.JSONObject;
  * This class represents a generic device
  */
 public abstract class Device {
-    String id;
-    MQTTClient connection;
+    protected String id;
+    protected MQTTClient connection;
 
     /**
      * Basic example constructor, it only connects to the server
      * @param id the device id
      */
-    Device(String id) {
+    protected Device(String id) {
         this.id = id;
     }
+
+    /**
+     * Connects the device to all its servers/brokers and performs all necessary actions to initialize the component
+     */
+    public abstract void init() throws MqttException;
 
     protected void connect(String brokerAddress) throws MqttException {
         this.connection = new MQTTClient(this, brokerAddress);
