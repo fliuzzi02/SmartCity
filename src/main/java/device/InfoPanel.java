@@ -6,7 +6,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Objects;
+
+import static java.lang.Math.abs;
 
 /**
  * This class represents an InfoPanel device
@@ -17,18 +18,27 @@ import java.util.Objects;
  * Subscribes to topic .../road/<roadSegment>/traffic
  */
 public class InfoPanel extends Device{
-    String roadSegment;
+    // TODO: Add AWS IoT Device Shadow functionality
+    final String roadSegment;
+    final int position;
     FunctionStatus trafficStatus;
     FunctionStatus accidentStatus;
     ArrayList<String> accidentsIds = new ArrayList<>();
     FunctionStatus circulationStatus;
 
-    InfoPanel(String id, String roadSegment) {
+    /**
+     * Constructor of the Information Panel
+     * @param id id of the panel
+     * @param roadSegment name of the segment where the panel is located
+     * @param position position in meters at which the panel is located
+     */
+    InfoPanel(String id, String roadSegment, int position) {
         super(id);
         this.roadSegment = roadSegment;
         this.trafficStatus = FunctionStatus.OFF;
         this.accidentStatus = FunctionStatus.OFF;
         this.circulationStatus = FunctionStatus.OFF;
+        this.position = position;
     }
 
     @Override
@@ -45,29 +55,35 @@ public class InfoPanel extends Device{
     protected void onMessage(String topic, JSONObject payload) {
         Logger.info(this.id, "Received message from " + topic + ": " + payload.toString());
 
-        if (topic.contains("info")){
+        if (topic.endsWith("info")){
             updateTrafficCongestion(payload);
-        } else if (topic.contains("alerts")){
+        } else if (topic.endsWith("alerts")){
             updateAccident(payload);
+        } else if (topic.endsWith("traffic")){
+            updateCirculation(payload);
         }
     }
 
     private void updateTrafficCongestion(JSONObject payload){
-        JSONObject msg = payload.getJSONObject("msg");
-        String status = msg.getString("status");
+        String type = payload.getString("type");
+        if (type.equals("ROAD_STATUS")) {
+            JSONObject msg = payload.getJSONObject("msg");
+            String status = msg.getString("status");
 
-        switch (status) {
-            case "Free_Flow", "Mostly_Free_Flow" -> this.trafficStatus = FunctionStatus.OFF;
-            case "Limited_Manouvers" -> this.trafficStatus = FunctionStatus.BLINK;
-            case "No_Manouvers", "Collapsed" -> this.trafficStatus = FunctionStatus.ON;
+            // TODO: Maybe add a default case
+            switch (status) {
+                case "Free_Flow", "Mostly_Free_Flow" -> this.trafficStatus = FunctionStatus.OFF;
+                case "Limited_Manouvers" -> this.trafficStatus = FunctionStatus.BLINK;
+                case "No_Manouvers", "Collapsed" -> this.trafficStatus = FunctionStatus.ON;
+            }
+
+            Logger.info(this.id, "Traffic congestion status: " + this.trafficStatus);
         }
-
-        Logger.info(this.id, "Traffic congestion status: " + this.trafficStatus);
     }
 
     private void updateAccident(JSONObject payload){
         String type = payload.getString("type");
-        if(Objects.equals(type, "ACCIDENT")){
+        if(type.equals("ACCIDENT")){
             JSONObject msg = payload.getJSONObject("msg");
             String event = msg.getString("event");
             String accidentId = msg.getString("id");
@@ -92,12 +108,37 @@ public class InfoPanel extends Device{
         }
     }
 
+    private void updateCirculation(JSONObject payload){
+        String type = payload.getString("type");
+        if (type.equals("TRAFFIC")){
+            JSONObject msg = payload.getJSONObject("msg");
+            String action = msg.getString("action");
+            String vehicle = msg.getString("vehicle-role");
+            int pos = msg.getInt("position");
+
+            circulationStatus = FunctionStatus.OFF;
+
+            if(vehicle.equals("Ambulance") || vehicle.equals("Police")){
+                if (action.equals("VEHICLE_IN")){
+                    if( abs(this.position - pos) <= 200) {
+                        circulationStatus = FunctionStatus.BLINK;
+                    } else if ( abs(this.position - pos) > 200) {
+                        circulationStatus = FunctionStatus.ON;
+                    }
+                }
+            }
+
+            Logger.info(this.id, "Reserved circulation status: " + this.circulationStatus);
+        }
+    }
+
     public static void main(String[] args) {
-        InfoPanel panel = new InfoPanel("Panel1", "R1s1");
+        InfoPanel panel = new InfoPanel("Panel1", "R1s1", 1500);
         try {
             panel.connect(ConnOptions.BROKER_ADDRESS, ConnOptions.USERNAME, ConnOptions.PASSWORD);
             panel.connection.subscribe(ConnOptions.BASE_TOPIC + "/road/" + panel.roadSegment + "/info");
             panel.connection.subscribe(ConnOptions.BASE_TOPIC + "/road/" + panel.roadSegment + "/alerts");
+            panel.connection.subscribe(ConnOptions.BASE_TOPIC + "/road/" + panel.roadSegment + "/traffic");
         } catch (MqttException e) {
             Logger.error(panel.id, "An error occurred: " + e.getMessage());
         }
