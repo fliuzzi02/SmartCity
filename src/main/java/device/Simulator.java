@@ -25,9 +25,8 @@ public class Simulator {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            // TODO: Create message class
-            JSONObject payload = Message.createStepMessage(counter);
-            client.publish(GlobalVars.BASE_TOPIC + "/step", payload);
+            Message message = Message.createStepMessage(counter);
+            client.publish(GlobalVars.BASE_TOPIC + "/step", message.toJson());
             counter++;
         }
     }
