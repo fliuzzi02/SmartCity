@@ -3,11 +3,11 @@ package main.java.utils;
 import org.json.JSONObject;
 
 public class Message {
-    private String type;
-    private long timestamp;
+    private final String type;
+    private final long timestamp;
 
     // TODO: Maybe this should be a proper class
-    private JSONObject msg;
+    private final JSONObject msg;
 
     Message(String type, long timestamp, JSONObject msg){
         this.type = type;
