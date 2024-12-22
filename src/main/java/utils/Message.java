@@ -34,6 +34,11 @@ public class Message {
         return payload;
     }
 
+    /**
+     * Creates a Simulator step message
+     * @param counter the step counter of the sim
+     * @return the message
+     */
     public static Message createStepMessage(int counter){
         JSONObject msg = new JSONObject();
         msg.put("simulator", "PTPaterna");
@@ -42,12 +47,33 @@ public class Message {
         return new Message("STEP", System.currentTimeMillis(), msg);
     }
 
-    public static Message createRoadStatus(){
+    /**
+     * Creates a new road Status message
+     * @param road The name of the road, es. 'R1'
+     * @param segment The name of the segment, es. 'R1s1'
+     * @param len The length of the segment in km, es. 50
+     * @param maxSpeed The maximum speed allowed in the segment, es. 40
+     * @param capacity The maximum capacity of the segment, es. 8
+     * @param status The status of the segment, es. 'No_Manouvers'
+     * @return the message
+     */
+    public static Message createRoadStatus(String road, String segment, int len, int maxSpeed, int capacity, String status){
         JSONObject msg = new JSONObject();
-        msg.put("road", "R1s1");
-        msg.put("status", "CLOSED");
+        msg.put("code", segment);
+        msg.put("rt", "road-segment");
+        msg.put("road-segment", segment);
+        msg.put("link", "/segment/" + segment);
+        msg.put("road", road);
+        msg.put("length", len);
+        msg.put("start-kp", 0);
+        msg.put("end-kp", len);
+        msg.put("max-speed", maxSpeed);
+        msg.put("current-max-speed", maxSpeed);
+        msg.put("capacity", capacity);
+        msg.put("num-vehicles", 0);
+        msg.put("density", 0);
+        msg.put("status", status);
 
         return new Message("ROAD_STATUS", System.currentTimeMillis(), msg);
     }
-
 }
