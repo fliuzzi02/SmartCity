@@ -18,8 +18,8 @@ public class Vehicle extends Device {
     // TODO: To implement this class we need for it to include the component navigator
     private final VehicleRole role;
     private Navigator navigator;
-    private int speed;
-    private int setSpeed;
+    private int actualSpeed;
+    private int cruiseSpeed;
     private String lastSegment = "";
     private int lastPosition = -1;
 
@@ -28,7 +28,7 @@ public class Vehicle extends Device {
         this.role = role;
         this.navigator = new Navigator(id+"-navigator");
         this.navigator.setCurrentPosition(initialPosition);
-        this.setSpeed = initialSpeed;
+        this.cruiseSpeed = initialSpeed;
     }
 
     @Override
@@ -40,18 +40,20 @@ public class Vehicle extends Device {
     @Override
     protected void onMessage(String topic, JSONObject payload) {
         Logger.info(this.id, "Received message from " + topic + ": " + payload.toString());
-        if (topic.endsWith("step")){
-            handleSimulationStep(new Message(payload));
+        Message message = new Message(payload);
+        switch (message.getType()) {
+            case "SIMULATOR_STEP" -> handleSimulationStep();
+            case "TRAFFIC_SIGNAL" -> handleTrafficSignal(message);
+            default -> Logger.warn(this.id, "Unknown message type: " + message.getType());
         }
-
     }
 
     /**
-     * This method sets the speed of the vehicle
+     * This method sets the cruise speed of the vehicle
      * @param speed the speed of the vehicle in km/h
      */
     public void setSpeed(int speed){
-        this.setSpeed = speed;
+        this.cruiseSpeed = speed;
     }
 
     public void setRoute(IRoute route) throws RoutingException{
@@ -69,24 +71,40 @@ public class Vehicle extends Device {
         this.navigator.startRouting();
     }
 
-    private void handleSimulationStep(Message message){
-        // When receiving a step message, move vehicle and update position
-        if(message.getType().equals("SIMULATOR_STEP")){
-            this.navigator.move(STEP_MS, speed);
-            publishUpdate(this.navigator.getCurrentPosition());
+    private void handleTrafficSignal(Message message) {
+        JSONObject msg = message.getMsg();
 
-            Logger.debug(this.id, "Moved to: " + this.navigator.getCurrentPosition());
+        if(msg.getString("signal-type").equals("SPEED-LIMIT")){
+            // If the vehicle is in the range of the speed limit, set the speed limit accordingly
+            int start = msg.getInt("starting-position");
+            int end = msg.getInt("ending-position");
+            int limit = msg.getInt("value");
+            if(this.navigator.getCurrentPosition().getPosition() >= start && this.navigator.getCurrentPosition().getPosition() <= end){
+                updateSpeed(limit);
+            }
+        } else if (msg.getString("signal-type").equals("TRAFFIC-LIGHT")){
+            // If the vehicle is in the range of the traffic light that is red (HLL) and within 50m, set the speed to 0
+            int start = msg.getInt("starting-position");
+            if(this.navigator.getCurrentPosition().getPosition() >= start-50 && this.navigator.getCurrentPosition().getPosition() <= start + 50){
+                if(msg.getString("value").equals("HLL")) updateSpeed(0);
+                if(msg.getString("value").equals("LLH")) updateSpeed(999);
+            }
         }
     }
 
-    private void publishUpdate(IRoadPoint position){
+    private void handleSimulationStep(){
+        // When receiving a step message, move vehicle and update position
+        this.navigator.move(STEP_MS, actualSpeed);
+
+        Logger.debug(this.id, "Moved to: " + this.navigator.getCurrentPosition());
+
+        IRoadPoint position = this.navigator.getCurrentPosition();
         String roadSegment = position.getRoadSegment();
         int segmentPosition = position.getPosition();
-        Message message;
 
         // If the vehicle is still in the same segment, just update the position
         if(roadSegment.equals(lastSegment)){
-
+            // TODO: What to do here? Probably update the speed
         } else {
             // Publish vehicle entering new segment
             handleEntrance(position);
@@ -140,6 +158,18 @@ public class Vehicle extends Device {
             this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + roadSegment + "/traffic", message.toJson());
         } catch (MqttException e) {
             Logger.error(this.id, "Error publishing VEHICLE_OUT message: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Updates the speed limit and the actual speed of the vehicle. It sets the speed upper bound to the new speed limit or the cruise speed, whichever is lower
+     * @param speed the new upper limit of the speed
+     */
+    private void updateSpeed(int speed){
+        if(speed <= this.actualSpeed){
+            this.actualSpeed = speed;
+        } else if(speed >= this.cruiseSpeed){
+            this.actualSpeed = this.cruiseSpeed;
         }
     }
 
