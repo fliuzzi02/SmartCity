@@ -26,7 +26,7 @@ public class Logger {
 	 * @param msg - the message to be logged
 	 */
 	public static void debug(String sender, String msg) {
-		System.out.println(putCurrentTimestamp() + " DEBUG [" + formatWithSpaces(sender,sender_spacing) + "] " + msg);
+		System.out.println(putCurrentTimestamp() + " \u001B[34mDEBUG [" + formatWithSpaces(sender,sender_spacing) + "] " + msg + "\u001B[0m");
 	}
 
 	/**
@@ -35,7 +35,7 @@ public class Logger {
 	 * @param msg - the message to be logged
 	 */
 	public static void warn(String sender, String msg) {
-		System.out.println(putCurrentTimestamp() + " WARN  [" + formatWithSpaces(sender,sender_spacing) + "] " + msg);
+		System.out.println(putCurrentTimestamp() + " \u001B[33mWARN [" + formatWithSpaces(sender,sender_spacing) + "] " + msg + "\u001B[0m");
 	}
 
 	/**
@@ -44,7 +44,7 @@ public class Logger {
 	 * @param msg - the message to be logged
 	 */
 	public static void error(String sender, String msg) {
-		System.out.println(putCurrentTimestamp() + " ERROR [" + formatWithSpaces(sender,sender_spacing) + "] " + msg);
+		System.err.println(putCurrentTimestamp() + " ERROR [" + formatWithSpaces(sender,sender_spacing) + "] " + msg);
 	}
 
 	/**
