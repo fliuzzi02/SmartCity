@@ -19,7 +19,7 @@ public class Vehicle extends Device {
     private final VehicleRole role;
     private Navigator navigator;
     private int speed;
-
+    private int setSpeed;
     private String lastSegment = "";
     private int lastPosition = -1;
 
@@ -28,7 +28,7 @@ public class Vehicle extends Device {
         this.role = role;
         this.navigator = new Navigator(id+"-navigator");
         this.navigator.setCurrentPosition(initialPosition);
-        this.speed = initialSpeed;
+        this.setSpeed = initialSpeed;
     }
 
     @Override
@@ -43,6 +43,7 @@ public class Vehicle extends Device {
         if (topic.endsWith("step")){
             handleSimulationStep(new Message(payload));
         }
+
     }
 
     /**
@@ -50,7 +51,7 @@ public class Vehicle extends Device {
      * @param speed the speed of the vehicle in km/h
      */
     public void setSpeed(int speed){
-        this.speed = speed;
+        this.setSpeed = speed;
     }
 
     public void setRoute(IRoute route) throws RoutingException{
@@ -85,37 +86,60 @@ public class Vehicle extends Device {
 
         // If the vehicle is still in the same segment, just update the position
         if(roadSegment.equals(lastSegment)){
-            // TODO: Is this correct? VEHICLE_UPDATE is not defined in the specifications of the project
-            message = Message.createTraffic(this.id, this.role.name(), "VEHICLE_UPDATE", roadSegment, segmentPosition);
 
-            try {
-                this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + roadSegment + "/traffic", message.toJson());
-            } catch (MqttException e) {
-                Logger.error(this.id, "Error publishing VEHICLE_UPDATE message: " + e.getMessage());
-            }
         } else {
             // Publish vehicle entering new segment
-            message = Message.createTraffic(this.id, this.role.name(), "VEHICLE_IN", roadSegment, segmentPosition);
-
-            try {
-                this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + roadSegment + "/traffic", message.toJson());
-            } catch (MqttException e) {
-                Logger.error(this.id, "Error publishing VEHICLE_IN message: " + e.getMessage());
-            }
+            handleEntrance(position);
 
             // Publish vehicle leaving previous segment
-            if(!lastSegment.equals("")){
-                message = Message.createTraffic(this.id, this.role.name(), "VEHICLE_OUT", lastSegment, lastPosition);
+            if(!lastSegment.equals("")) handleExit(new RoadPoint(lastSegment, lastPosition));
+        }
 
-                try {
-                    this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + lastSegment + "/traffic", message.toJson());
-                } catch (MqttException e) {
-                    Logger.error(this.id, "Error publishing VEHICLE_IN message: " + e.getMessage());
-                }
-            }
+        lastSegment = roadSegment;
+        lastPosition = segmentPosition;
+    }
 
-            lastSegment = roadSegment;
-            lastPosition = segmentPosition;
+    private void handleEntrance(IRoadPoint position) {
+        // Subscribe to new segment
+        try {
+            this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/signals");
+            this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/traffic");
+            this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/alerts");
+        } catch (MqttException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Publish vehicle entering new segment
+        String roadSegment = position.getRoadSegment();
+        int segmentPosition = position.getPosition();
+        Message message = Message.createTraffic(this.id, this.role.name(), "VEHICLE_IN", roadSegment, segmentPosition);
+
+        try {
+            this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + roadSegment + "/traffic", message.toJson());
+        } catch (MqttException e) {
+            Logger.error(this.id, "Error publishing VEHICLE_IN message: " + e.getMessage());
+        }
+    }
+
+    private void handleExit(IRoadPoint position) {
+        // Unsubscribe from previous segment
+        try {
+            this.connection.unsubscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/signals");
+            this.connection.unsubscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/traffic");
+            this.connection.unsubscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/alerts");
+        } catch (MqttException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Publish vehicle leaving previous segment
+        String roadSegment = position.getRoadSegment();
+        int segmentPosition = position.getPosition();
+        Message message = Message.createTraffic(this.id, this.role.name(), "VEHICLE_OUT", roadSegment, segmentPosition);
+
+        try {
+            this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + roadSegment + "/traffic", message.toJson());
+        } catch (MqttException e) {
+            Logger.error(this.id, "Error publishing VEHICLE_OUT message: " + e.getMessage());
         }
     }
 
