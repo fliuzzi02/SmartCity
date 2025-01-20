@@ -18,8 +18,10 @@ public class Vehicle extends Device {
     // TODO: To implement this class we need for it to include the component navigator
     private final VehicleRole role;
     private Navigator navigator;
-    private int actualSpeed;
-    private int cruiseSpeed;
+    int actualSpeed;
+    int cruiseSpeed;
+    int speedLimit;
+    private boolean redLight = false;
     private String lastSegment = "";
     private int lastPosition = -1;
 
@@ -80,14 +82,16 @@ public class Vehicle extends Device {
             int end = msg.getInt("ending-position");
             int limit = msg.getInt("value");
             if(this.navigator.getCurrentPosition().getPosition() >= start && this.navigator.getCurrentPosition().getPosition() <= end){
-                updateSpeed(limit);
+                this.speedLimit = limit;
+                updateSpeed();
             }
         } else if (msg.getString("signal-type").equals("TRAFFIC-LIGHT")){
             // If the vehicle is in the range of the traffic light that is red (HLL) and within 50m, set the speed to 0
             int start = msg.getInt("starting-position");
             if(this.navigator.getCurrentPosition().getPosition() >= start-50 && this.navigator.getCurrentPosition().getPosition() <= start + 50){
-                if(msg.getString("value").equals("HLL")) updateSpeed(0);
-                if(msg.getString("value").equals("LLH")) updateSpeed(999);
+                if(msg.getString("value").equals("HLL")) redLight = true;
+                if(msg.getString("value").equals("LLH")) redLight = false;
+                updateSpeed();
             }
         }
     }
@@ -143,6 +147,7 @@ public class Vehicle extends Device {
         } catch (MqttException e) {
             Logger.error(this.id, "Error publishing VEHICLE_IN message: " + e.getMessage());
         }
+        Logger.debug(this.id, "Entered road segment " + roadSegment);
     }
 
     private void handleExit(IRoadPoint position) {
@@ -165,18 +170,16 @@ public class Vehicle extends Device {
         } catch (MqttException e) {
             Logger.error(this.id, "Error publishing VEHICLE_OUT message: " + e.getMessage());
         }
+        Logger.debug(this.id, "Exited road segment " + roadSegment);
     }
 
     /**
-     * Updates the speed limit and the actual speed of the vehicle. It sets the speed upper bound to the new speed limit or the cruise speed, whichever is lower
-     * @param speed the new upper limit of the speed
+     * Updates the actual speed of the vehicle to the maximum of the speed limit and the cruise speed
      */
-    private void updateSpeed(int speed){
-        if(speed <= this.actualSpeed){
-            this.actualSpeed = speed;
-        } else if(speed >= this.cruiseSpeed){
-            this.actualSpeed = this.cruiseSpeed;
-        }
+    void updateSpeed(){
+        this.actualSpeed = Math.min(this.speedLimit, this.cruiseSpeed);
+        if(redLight) this.actualSpeed = 0;
+        Logger.debug(this.id, "Speed updated to " + this.actualSpeed + " km/h");
     }
 
     public enum VehicleRole {

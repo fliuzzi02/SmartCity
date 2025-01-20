@@ -1,0 +1,16 @@
+package main.java.device.vehicle;
+
+import main.java.device.vehicle.navigation.components.RoadPoint;
+import main.java.utils.Logger;
+
+public class SpecialVehicle extends Vehicle{
+    SpecialVehicle(String id, VehicleRole role, int initialSpeed, RoadPoint initialPosition) {
+        super(id, role, initialSpeed, initialPosition);
+    }
+
+    @Override
+    void updateSpeed() {
+        this.actualSpeed = this.cruiseSpeed;
+        Logger.debug(this.id, "Special vehicle speed updated to " + this.actualSpeed + " km/h");
+    }
+}
