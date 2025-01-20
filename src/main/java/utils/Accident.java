@@ -1,4 +1,4 @@
-package main.java.device;
+package main.java.utils;
 
 public class Accident {
     String accidentId;

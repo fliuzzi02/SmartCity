@@ -2,10 +2,15 @@ package main.java.device;
 
 import main.java.utils.GlobalVars;
 import main.java.utils.Logger;
+import main.java.utils.Message;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
 public class RoadManager extends Device {
+
+    ArrayList<SpeedLimit> speedLimits = new ArrayList<>();
 
     RoadManager(String id) {
         super(id);
@@ -15,21 +20,95 @@ public class RoadManager extends Device {
     public void init() throws MqttException {
         this.connect(GlobalVars.BROKER_ADDRESS, GlobalVars.USERNAME, GlobalVars.PASSWORD);
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/+/alerts");
+        this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/+/info");
     }
 
     @Override
     protected void onMessage(String topic, JSONObject payload) {
-        // TODO: Verify that the manager only has to retransmit the same message from alerts to info??
-        String segment = payload.getJSONObject("msg").getString("road-segment");
+        Message message = new Message(payload);
+        Logger.debug(this.id, "Received message from " + topic + ": " + payload);
+
+        if(topic.endsWith("alerts")) {
+            // Retransmit the alert to the info topic
+            try {
+                this.connection.publish(topic.replace("alerts", "info"), message.toJson());
+            } catch (MqttException e) {
+                Logger.error(this.id, "An error occurred: " + e.getMessage());
+            }
+        } else if (topic.endsWith("info")) {
+            handleStatus(message);
+        }
+    }
+
+    private void handleStatus(Message message) {
+        if(!message.getType().equals("ROAD_STATUS")) {
+            Logger.warn(this.id, "Received a message of type " + message.getType() + " on a status topic");
+            return;
+        }
+
+        // Gett all the information from the message
+        JSONObject msg = message.getMsg();
+        String roadStatus = msg.getString("status");
+        String roadSegment = msg.getString("road-segment");
+        int startKm = msg.getInt("start-kp");
+        int endKm = msg.getInt("end-kp");
+        int speedLimit = msg.getInt("max-speed");
+
+        switch (roadStatus) {
+            case "No_Manouvers", "Collapsed":
+                speedLimit = 20;
+                break;
+            case "Limited_Manouvers":
+                speedLimit -= 20;
+                break;
+            case "Free_Flow", "Mostly_Free_Flow":
+                speedLimit = 999;
+                break;
+            default:
+                Logger.warn(this.id, "Received an unknown status: " + roadStatus);
+        }
+
+        // If speed limit is 999, remove the speed limit from the list with the corresponding road segment
+        if(speedLimit == 999) removeSpeedLimit(roadSegment);
+        // Else, apply the speed limit to the road segment
+        else applySpeedLimit(roadSegment, startKm, endKm, speedLimit);
+    }
+
+    private void applySpeedLimit(String roadSegment, int startKm, int endKm, int speedLimit) {
+        // Check if the speed limit is already in the list, if so update it
+        for(SpeedLimit sl : speedLimits) {
+            if(sl.getRoadSegment().equals(roadSegment)) {
+                sl.updateSpeedLimit(speedLimit);
+                return;
+            }
+        }
+
+        // Otherwise, create a new speed limit
+        createSpeedLimit(roadSegment, startKm, endKm, speedLimit);
+    }
+
+    private void createSpeedLimit(String roadSegment, int startKm, int endKm, int speedLimit) {
+        SpeedLimit sl = new SpeedLimit(this.id + "-" + roadSegment, speedLimit, roadSegment, startKm, endKm);
+        speedLimits.add(sl);
         try {
-            this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + segment + "/info", payload);
+            sl.init();
         } catch (MqttException e) {
-            Logger.error(this.id, "Could not publish message on topic: " + topic);
+            Logger.error(this.id, "An error occurred: " + e.getMessage());
+        }
+    }
+
+    private void removeSpeedLimit(String roadSegment) {
+        for(SpeedLimit sl : speedLimits) {
+            if(sl.getRoadSegment().equals(roadSegment)) {
+                sl.unregister();
+                speedLimits.remove(sl);
+                return;
+            }
         }
     }
 
     public static void main(String []args) {
-        RoadManager manager = new RoadManager(args[0]);
+        RoadManager manager = new RoadManager("RM-1");
         try {
             manager.init();
         } catch (MqttException e) {

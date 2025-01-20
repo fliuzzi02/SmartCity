@@ -43,4 +43,20 @@ public class SpeedLimit extends Device {
     protected void updateSpeedLimit(int newSpeedLimit) {
         this.speedLimit = newSpeedLimit;
     }
+
+    /**
+     * This method returns the road segment where the speed limit is applied
+     * @return the road segment
+     */
+    protected String getRoadSegment() {
+        return this.roadSegment;
+    }
+
+    protected void unregister() {
+        try {
+            this.connection.unsubscribe(GlobalVars.BASE_TOPIC + "/step");
+        } catch (MqttException e) {
+            Logger.error(this.id, "An error occurred: " + e.getMessage());
+        }
+    }
 }

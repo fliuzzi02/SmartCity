@@ -1,6 +1,6 @@
 package main.java.device.vehicle;
 
-import main.java.device.Accident;
+import main.java.utils.Accident;
 import main.java.device.Device;
 import main.java.device.vehicle.navigation.components.Navigator;
 import main.java.device.vehicle.navigation.components.RoadPoint;
@@ -16,6 +16,7 @@ import org.json.JSONObject;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import static java.lang.System.exit;
 import static main.java.utils.GlobalVars.STEP_MS;
 
 public class Vehicle extends Device {
@@ -24,7 +25,7 @@ public class Vehicle extends Device {
     private Navigator navigator;
     int actualSpeed;
     int cruiseSpeed;
-    int speedLimit;
+    int speedLimit = 999;
     private boolean redLight = false;
     private String lastSegment = "";
     private int lastPosition = -1;
@@ -123,7 +124,6 @@ public class Vehicle extends Device {
             int limit = msg.getInt("value");
             if(this.navigator.getCurrentPosition().getPosition() >= start && this.navigator.getCurrentPosition().getPosition() <= end){
                 this.speedLimit = limit;
-                updateSpeed();
             }
         } else if (msg.getString("signal-type").equals("TRAFFIC-LIGHT")){
             // If the vehicle is in the range of the traffic light that is red (HLL) and within 50m, set the speed to 0
@@ -131,13 +131,13 @@ public class Vehicle extends Device {
             if(this.navigator.getCurrentPosition().getPosition() >= start-50 && this.navigator.getCurrentPosition().getPosition() <= start + 50){
                 if(msg.getString("value").equals("HLL")) redLight = true;
                 if(msg.getString("value").equals("LLH")) redLight = false;
-                updateSpeed();
             }
         }
     }
 
     private void handleSimulationStep(){
         // When receiving a step message, move vehicle and update position
+        updateSpeed();
         this.navigator.move(STEP_MS, actualSpeed);
 
         Logger.debug(this.id, "Moved to: " + this.navigator.getCurrentPosition());
@@ -233,7 +233,7 @@ public class Vehicle extends Device {
 
     public static void main(String []args){
         RoadPoint initialPosition = new RoadPoint("R1s2", 0);
-        Vehicle vehicle = new Vehicle("3240JXM", VehicleRole.PrivateUsage, 0, initialPosition);
+        Vehicle vehicle = new Vehicle("3240KKK", VehicleRole.PrivateUsage, 10, initialPosition);
         try {
             vehicle.init();
 
@@ -251,6 +251,7 @@ public class Vehicle extends Device {
             vehicle.startRoute();
         } catch (MqttException | RoutingException e) {
             Logger.error(vehicle.id, "An error occurred: " + e.getMessage());
+            exit(-1);
         }
     }
 
