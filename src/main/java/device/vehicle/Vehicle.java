@@ -102,9 +102,15 @@ public class Vehicle extends Device {
         String roadSegment = position.getRoadSegment();
         int segmentPosition = position.getPosition();
 
-        // If the vehicle is still in the same segment, just update the position
+        // If the vehicle is still in the same segment, just update the position using VEHILCE_IN
         if(roadSegment.equals(lastSegment)){
-            // TODO: What to do here? Probably update the speed
+            Message message = Message.createTraffic(this.id, this.role.name(), "VEHICLE_IN", roadSegment, segmentPosition);
+
+            try {
+                this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + roadSegment + "/traffic", message.toJson());
+            } catch (MqttException e) {
+                Logger.error(this.id, "Error publishing VEHICLE_IN message: " + e.getMessage());
+            }
         } else {
             // Publish vehicle entering new segment
             handleEntrance(position);
