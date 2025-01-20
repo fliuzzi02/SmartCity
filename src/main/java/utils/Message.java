@@ -8,7 +8,6 @@ import org.json.JSONObject;
 public class Message {
     private final String type;
     private final long timestamp;
-
     private final JSONObject msg;
 
     /**
