@@ -63,7 +63,7 @@ public class MQTTClient implements MqttCallback {
         MqttMessage message = new MqttMessage(payload.toString().getBytes());
         message.setQos(0);
         this.client.publish(topic, message);
-        Logger.info(clientId, "Published message to " + topic);
+        Logger.debug(clientId, "Published message to " + topic);
     }
 
     protected void disconnect() throws MqttException {
@@ -78,7 +78,7 @@ public class MQTTClient implements MqttCallback {
 
     @Override
     public void messageArrived(String s, MqttMessage mqttMessage) {
-        Logger.info(clientId, "Received message on " + s);
+        Logger.debug(clientId, "Received message on " + s);
         JSONObject payload;
         try {
             payload = new JSONObject(new String(mqttMessage.getPayload()));
@@ -90,7 +90,7 @@ public class MQTTClient implements MqttCallback {
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
-        Logger.info(clientId, "Message delivered");
+        Logger.trace(clientId, "Message delivered");
     }
 
     @Override
