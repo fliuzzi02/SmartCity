@@ -59,6 +59,15 @@ public class MQTTClient implements MqttCallback {
     }
 
     /**
+     * This method allows the client to unsubscribe from the specified topic
+     * @param topic where to unsubscribe
+     */
+    public void unsubscribe(String topic) throws MqttException {
+        this.client.unsubscribe(topic);
+        Logger.info(clientId, "Unsubscribed from " + topic);
+    }
+
+    /**
      * This method allows to publish a message to the specified topic
      * @param topic where to publish
      * @param payload the message to publish
