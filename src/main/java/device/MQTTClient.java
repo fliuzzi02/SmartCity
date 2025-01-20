@@ -1,5 +1,6 @@
 package main.java.device;
 
+import main.java.utils.GlobalVars;
 import main.java.utils.Logger;
 import org.eclipse.paho.client.mqttv3.*;
 import org.json.JSONObject;
@@ -29,7 +30,6 @@ public class MQTTClient implements MqttCallback {
         Logger.info(clientId, "Connected to broker at " + this.address);
     }
 
-    // TODO: Do this better maybe with optional fields
     MQTTClient(Device mydevice, String brokerAddress, String username, String password) throws MqttException {
         this.myDevice = mydevice;
         this.address = brokerAddress;
@@ -60,9 +60,7 @@ public class MQTTClient implements MqttCallback {
      * @param payload the message to publish
      */
     public void publish(String topic, JSONObject payload) throws MqttException {
-        MqttMessage message = new MqttMessage(payload.toString().getBytes());
-        message.setQos(0);
-        this.client.publish(topic, message);
+        this.client.publish(topic, payload.toString().getBytes(), 0, false);
         Logger.debug(clientId, "Published message to " + topic);
     }
 
@@ -96,5 +94,19 @@ public class MQTTClient implements MqttCallback {
     @Override
     public void connectionLost(Throwable throwable) {
         Logger.error(clientId, "Connection lost: " + throwable.getMessage());
+    }
+
+    public static void main(String[] args) {
+        // Test the MQTTClient
+        try {
+            Device myDevice = new InfoPanel("test", "test", 0);
+            MQTTClient client = new MQTTClient(myDevice, GlobalVars.BROKER_ADDRESS);
+            JSONObject payload = new JSONObject();
+            payload.put("test", "test");
+            client.publish("testTopic", payload);
+            client.disconnect();
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
     }
 }
