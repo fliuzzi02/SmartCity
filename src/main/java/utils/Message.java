@@ -9,7 +9,6 @@ public class Message {
     private final String type;
     private final long timestamp;
 
-    // TODO: Maybe this should be a proper class
     private final JSONObject msg;
 
     /**
@@ -100,5 +99,69 @@ public class Message {
         msg.put("status", status);
 
         return new Message("ROAD_STATUS", msg);
+    }
+
+    /**
+     * Creates a new traffic signal message
+     * @param id the id of the signal
+     * @param roadSegment the road segment where the signal is
+     * @param signalType the type of the signal (TRAFFIC_LIGHT or SPEED_LIMIT)
+     * @param startingPosition the starting position of the signal
+     * @param endingPosition the ending position of the signal
+     * @param value the value of the signal (can be String in case of TRAFFIC_LIGHT or int in case of SPEED_LIMIT)
+     * @return the message containing the formatted information
+     */
+    public static Message createTrafficSignal(String id, String roadSegment, String signalType, int startingPosition, int endingPosition, Object value){
+        JSONObject msg = new JSONObject();
+        msg.put("id", id);
+        msg.put("rt", "traffic-signal");
+        msg.put("signal-type", signalType);
+        msg.put("road-segment", roadSegment);
+        msg.put("starting-position", startingPosition);
+        msg.put("ending-position", endingPosition);
+        msg.put("value", value);
+
+        return new Message("TRAFFIC_SIGNAL", msg);
+    }
+
+    /**
+     * Creates a new traffic message that should be published by cars
+     * @param id the id of the vehicle (its plate)
+     * @param vehicleRole the role of the vehicle
+     * @param action the action the vehicle is performing (VEHICLE_IN or VEHICLE_OUT)
+     * @param roadSegment the road segment where the vehicle is
+     * @param position the position of the vehicle in the road segment in meters
+     * @return the message containing the formatted information
+     */
+    public static Message createTraffic(String id, String vehicleRole, String action, String roadSegment, int position) {
+        JSONObject msg = new JSONObject();
+        msg.put("vehicle-id", id);
+        msg.put("vehicle-role", vehicleRole);
+        msg.put("action", action);
+        msg.put("road-segment", roadSegment);
+        msg.put("position", position);
+
+        return new Message("TRAFFIC", msg);
+    }
+
+    /**
+     * Creates a new accident message
+     * @param accidentId the id of the accident, should match in both OPEN and CLOSE event
+     * @param event the event of the accident (OPEN or CLOSE)
+     * @param vehicle the vehicle involved in the accident
+     * @param roadSegment the road segment where the accident is
+     * @param position the position of the accident in the road segment in meters
+     * @return the message containing the formatted information
+     */
+    public static Message createAccident(String accidentId, String event, String vehicle, String roadSegment, int position){
+        JSONObject msg = new JSONObject();
+        msg.put("event", event);
+        msg.put("id", accidentId);
+        msg.put("rt", "accident");
+        msg.put("vehicle", vehicle);
+        msg.put("road-segment", roadSegment);
+        msg.put("position", position);
+
+        return new Message("ACCIDENT", msg);
     }
 }
