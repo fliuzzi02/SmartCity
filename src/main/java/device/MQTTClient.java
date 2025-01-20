@@ -2,10 +2,13 @@ package main.java.device;
 
 import main.java.utils.GlobalVars;
 import main.java.utils.Logger;
+import main.java.utils.Message;
 import org.eclipse.paho.client.mqttv3.*;
 import org.json.JSONObject;
 
 import java.util.UUID;
+
+import static java.lang.System.exit;
 
 /**
  * This class represents the MQTT Connection to the broker
@@ -25,6 +28,7 @@ public class MQTTClient implements MqttCallback {
         this.client = new MqttClient(this.address, this.clientId);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setCleanSession(true);
+        this.client.setTimeToWait(1000);
         this.client.setCallback(this);
         this.client.connect(options);
         Logger.info(clientId, "Connected to broker at " + this.address);
@@ -101,10 +105,10 @@ public class MQTTClient implements MqttCallback {
         try {
             Device myDevice = new InfoPanel("test", "test", 0);
             MQTTClient client = new MQTTClient(myDevice, GlobalVars.BROKER_ADDRESS);
-            JSONObject payload = new JSONObject();
-            payload.put("test", "test");
-            client.publish("testTopic", payload);
+            Message message = Message.createTraffic("test", "sadnnead", "VEHICLE_IN", "ASDAS", 0);
+            client.publish(GlobalVars.BASE_TOPIC + "/road/" + "ASDAS" + "/traffic", message.toJson());
             client.disconnect();
+            exit(0);
         } catch (MqttException e) {
             e.printStackTrace();
         }

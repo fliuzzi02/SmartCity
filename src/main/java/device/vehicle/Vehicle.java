@@ -81,42 +81,41 @@ public class Vehicle extends Device {
     private void publishUpdate(IRoadPoint position){
         String roadSegment = position.getRoadSegment();
         int segmentPosition = position.getPosition();
+        Message message;
 
         // If the vehicle is still in the same segment, just update the position
         if(roadSegment.equals(lastSegment)){
-
-        } else {
-            // Publish vehicle entering new segment
-            // TODO: This should be a proper message
-            JSONObject msg = new JSONObject();
-            msg.put("action", "VEHICLE_IN");
-            msg.put("vehicle-role", this.role.name());
-            msg.put("vehicle-id", this.id);
-            msg.put("road-segment", roadSegment);
-            msg.put("position", segmentPosition);
-            Message message = new Message("TRAFFIC", msg);
+            // TODO: Is this correct? VEHICLE_UPDATE is not defined in the specifications of the project
+            message = Message.createTraffic(this.id, this.role.name(), "VEHICLE_UPDATE", roadSegment, segmentPosition);
 
             try {
                 this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + roadSegment + "/traffic", message.toJson());
-            } catch (MqttException ignored) {
+            } catch (MqttException e) {
+                Logger.error(this.id, "Error publishing VEHICLE_UPDATE message: " + e.getMessage());
+            }
+        } else {
+            // Publish vehicle entering new segment
+            message = Message.createTraffic(this.id, this.role.name(), "VEHICLE_IN", roadSegment, segmentPosition);
+
+            try {
+                this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + roadSegment + "/traffic", message.toJson());
+            } catch (MqttException e) {
+                Logger.error(this.id, "Error publishing VEHICLE_IN message: " + e.getMessage());
             }
 
             // Publish vehicle leaving previous segment
             if(!lastSegment.equals("")){
-                msg = new JSONObject();
-                msg.put("action", "VEHICLE_OUT");
-                msg.put("vehicle-role", this.role.name());
-                msg.put("vehicle-id", this.id);
-                msg.put("road-segment", lastSegment);
-                msg.put("position", lastPosition);
-                message = new Message("TRAFFIC", msg);
+                message = Message.createTraffic(this.id, this.role.name(), "VEHICLE_OUT", lastSegment, lastPosition);
 
                 try {
                     this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + lastSegment + "/traffic", message.toJson());
                 } catch (MqttException e) {
-                    throw new RuntimeException(e);
+                    Logger.error(this.id, "Error publishing VEHICLE_IN message: " + e.getMessage());
                 }
             }
+
+            lastSegment = roadSegment;
+            lastPosition = segmentPosition;
         }
     }
 
@@ -131,7 +130,7 @@ public class Vehicle extends Device {
 
     public static void main(String []args){
         RoadPoint initialPosition = new RoadPoint("R1s2", 0);
-        Vehicle vehicle = new Vehicle("3240JVM", VehicleRole.PrivateUsage, 0, initialPosition);
+        Vehicle vehicle = new Vehicle("3240JXM", VehicleRole.PrivateUsage, 0, initialPosition);
         try {
             vehicle.init();
 
