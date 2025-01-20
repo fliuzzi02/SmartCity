@@ -2,6 +2,9 @@ package main.java.utils;
 
 import org.json.JSONObject;
 
+/**
+ * This class represents a message that can be sent through the MQTT broker, containing a type, a timestamp and the actual payload, called msg
+ */
 public class Message {
     private final String type;
     private final long timestamp;
@@ -9,13 +12,22 @@ public class Message {
     // TODO: Maybe this should be a proper class
     private final JSONObject msg;
 
-    Message(String type, long timestamp, JSONObject msg){
+    /**
+     * This constructor creates a message with a type and a msg (The inner payload of the message)
+     * @param type the type of the message
+     * @param msg the payload of the message
+     */
+    public Message(String type, JSONObject msg){
         this.type = type;
-        this.timestamp = timestamp;
+        this.timestamp = System.currentTimeMillis();
         this.msg = msg;
     }
 
-    Message(JSONObject payload){
+    /**
+     * This constructor creates a message from a JSON object of the received payload from the broker
+     * @param payload the payload of the message
+     */
+    public Message(JSONObject payload){
         this.type = payload.getString("type");
         this.timestamp = payload.getLong("timestamp");
         this.msg = payload.getJSONObject("msg");
@@ -35,6 +47,19 @@ public class Message {
     }
 
     /**
+     * This method returns the type of the message
+     * @return the type of the message as a string
+     */
+    public String getType(){
+        return this.type;
+    }
+
+    // TODO: At this point we should have one class for each type of message
+    public JSONObject getMsg(){
+        return this.msg;
+    }
+
+    /**
      * Creates a Simulator step message
      * @param counter the step counter of the sim
      * @return the message
@@ -44,7 +69,7 @@ public class Message {
         msg.put("simulator", "PTPaterna");
         msg.put("step", counter);
 
-        return new Message("STEP", System.currentTimeMillis(), msg);
+        return new Message("STEP", msg);
     }
 
     /**
@@ -74,6 +99,6 @@ public class Message {
         msg.put("density", 0);
         msg.put("status", status);
 
-        return new Message("ROAD_STATUS", System.currentTimeMillis(), msg);
+        return new Message("ROAD_STATUS", msg);
     }
 }
