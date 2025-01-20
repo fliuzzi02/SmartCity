@@ -11,6 +11,6 @@ public class SpecialVehicle extends Vehicle{
     @Override
     void updateSpeed() {
         this.actualSpeed = this.cruiseSpeed;
-        Logger.debug(this.id, "Special vehicle speed updated to " + this.actualSpeed + " km/h");
+        Logger.info(this.id, "Special vehicle speed updated to " + this.actualSpeed + " km/h");
     }
 }

@@ -1,5 +1,6 @@
 package main.java.device.vehicle;
 
+import main.java.device.Accident;
 import main.java.device.Device;
 import main.java.device.vehicle.navigation.components.Navigator;
 import main.java.device.vehicle.navigation.components.RoadPoint;
@@ -11,6 +12,9 @@ import main.java.utils.Logger;
 import main.java.utils.Message;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONObject;
+
+import java.util.LinkedList;
+import java.util.Queue;
 
 import static main.java.utils.GlobalVars.STEP_MS;
 
@@ -24,6 +28,8 @@ public class Vehicle extends Device {
     private boolean redLight = false;
     private String lastSegment = "";
     private int lastPosition = -1;
+    //FIFO Queue of Strings
+    private Queue<Accident> accidentList = new LinkedList<>();
 
     Vehicle(String id, VehicleRole role, int initialSpeed, RoadPoint initialPosition) {
         super(id);
@@ -37,6 +43,40 @@ public class Vehicle extends Device {
     public void init() throws MqttException {
         this.connect(GlobalVars.BROKER_ADDRESS);
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/step");
+    }
+
+    /**
+     * This method notifies that an accident has occurred at the position of the vehicle
+     */
+    public void notifyAccident(){
+        // create UUID for accident
+        String accidentID = java.util.UUID.randomUUID().toString();
+        String segment = navigator.getCurrentPosition().getRoadSegment();
+        int position = navigator.getCurrentPosition().getPosition();
+        Accident accident = new Accident(accidentID, segment, position);
+        accidentList.add(accident);
+
+        Message message = Message.createAccident(accidentID, "OPEN", this.id, segment, position);
+        try {
+            this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + segment + "/alerts", message.toJson());
+        } catch (MqttException e) {
+            Logger.error(this.id, "Error publishing ACCIDENT message: " + e.getMessage());
+        }
+    }
+
+    /**
+     * This method removes the oldest accident from the list and notifies that the accident has been resolved
+     */
+    public void removeAccident(){
+        Accident oldestAccident = accidentList.poll();
+        if(oldestAccident != null){
+            Message message = Message.createAccident(oldestAccident.getId(), "CLOSED", this.id, oldestAccident.getSegment(), oldestAccident.getPosition());
+            try {
+                this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + oldestAccident.getSegment() + "/alerts", message.toJson());
+            } catch (MqttException e) {
+                Logger.error(this.id, "Error publishing ACCIDENT message: " + e.getMessage());
+            }
+        }
     }
 
     @Override
