@@ -26,7 +26,7 @@ public class RoadManager extends Device {
     @Override
     protected void onMessage(String topic, JSONObject payload) {
         Message message = new Message(payload);
-        Logger.debug(this.id, "Received message from " + topic + ": " + payload);
+        // Logger.debug(this.id, "Received message from " + topic + ": " + payload);
 
         if(topic.endsWith("alerts")) {
             // Retransmit the alert to the info topic

@@ -20,9 +20,8 @@ import static java.lang.System.exit;
 import static main.java.utils.GlobalVars.STEP_MS;
 
 public class Vehicle extends Device {
-    // TODO: To implement this class we need for it to include the component navigator
     private final VehicleRole role;
-    private Navigator navigator;
+    private final Navigator navigator;
     int actualSpeed;
     int cruiseSpeed;
     int speedLimit = 999;
@@ -30,7 +29,7 @@ public class Vehicle extends Device {
     private String lastSegment = "";
     private int lastPosition = -1;
     //FIFO Queue of Strings
-    private Queue<Accident> accidentList = new LinkedList<>();
+    private final Queue<Accident> accidentList = new LinkedList<>();
 
     Vehicle(String id, VehicleRole role, int initialSpeed, RoadPoint initialPosition) {
         super(id);
@@ -140,7 +139,7 @@ public class Vehicle extends Device {
         updateSpeed();
         this.navigator.move(STEP_MS, actualSpeed);
 
-        Logger.debug(this.id, "Moved to: " + this.navigator.getCurrentPosition());
+        // Logger.debug(this.id, "Moved to: " + this.navigator.getCurrentPosition());
 
         IRoadPoint position = this.navigator.getCurrentPosition();
         String roadSegment = position.getRoadSegment();
@@ -245,13 +244,19 @@ public class Vehicle extends Device {
             vehicle.setRoute(route);
 
             // Set speed
-            vehicle.setSpeed(10);
+            vehicle.setSpeed(50);
 
             // Start route
             vehicle.startRoute();
+
+            // Wait for 10 seconds
+            Thread.sleep(10000);
+            vehicle.notifyAccident();
         } catch (MqttException | RoutingException e) {
             Logger.error(vehicle.id, "An error occurred: " + e.getMessage());
             exit(-1);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
