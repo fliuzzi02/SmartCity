@@ -42,7 +42,7 @@ public class Vehicle extends Device {
 
     @Override
     public void init() throws MqttException {
-        this.connect(GlobalVars.BROKER_ADDRESS);
+        this.mqttConnect(GlobalVars.BROKER_ADDRESS);
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/step");
     }
 

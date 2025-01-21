@@ -9,6 +9,7 @@ import org.json.JSONObject;
 public abstract class Device {
     protected String id;
     protected MQTTClient connection;
+    protected AWSClient awsConnection;
 
     /**
      * Basic example constructor, it only connects to the server
@@ -23,16 +24,16 @@ public abstract class Device {
      */
     public abstract void init() throws MqttException;
 
-    protected void connect(String brokerAddress) throws MqttException {
+    protected void mqttConnect(String brokerAddress) throws MqttException {
         this.connection = new MQTTClient(this, brokerAddress);
     }
 
-    protected void connect(String brokerAddress, String username, String password) throws MqttException {
-        this.connection = new MQTTClient(this, brokerAddress, username, password);
+    protected void awsConnect(String clientEndpoint, String certificateFile, String privateKeyFile) {
+        this.awsConnection = new AWSClient(this, clientEndpoint, certificateFile, privateKeyFile);
     }
 
     /**
-     * This method is called when a message is received
+     * This method is called when a message is received from any MQTT Broker
      * @param topic where the message was received
      * @param payload the message received
      */
