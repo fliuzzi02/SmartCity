@@ -26,7 +26,7 @@ public class Navigator implements INavigator {
    
    protected INavigator setOffRoadMode(boolean mode) {
 	   // Se usa para indicar que no se sigue o no se encuentra información de un segmento de carretera
-	   MySimpleLogger.debug(this.getId(), "Setting Off-Road Mode");
+	   MySimpleLogger.trace(this.getId(), "Setting Off-Road Mode");
 	   this.bean.setProperty("offroad", mode);
 	   return this;
    }
@@ -55,7 +55,7 @@ public class Navigator implements INavigator {
 		  //nos ubicamos en el punto de inicio de la ruta
 		  rp = route.get(0).getStartPoint();
 		  if ( this.getCurrentPosition() != null && !this.getCurrentPosition().equals(rp) ) {
-			  MySimpleLogger.debug(this.getId(), "Teleporting from " + this.getCurrentPosition() + " to " + rp);
+			  MySimpleLogger.trace(this.getId(), "Teleporting from " + this.getCurrentPosition() + " to " + rp);
 		  }
 		  this.setCurrentPosition(rp);
 	  }
@@ -181,7 +181,7 @@ public class Navigator implements INavigator {
 			break;
 		case ROUTING:
 			int travelled_distance = (int)(milliseconds * vehicle_current_speed * 0.0002778 ); // 1 seg -> m = speed*1000/3600
-			MySimpleLogger.debug(this.getId(), "Starting Point: " + String.format("%12s", this.getCurrentPosition()) + "\t Travelled Distance: " + travelled_distance + " m\t Speed " +  vehicle_current_speed + " Km/h");
+			MySimpleLogger.trace(this.getId(), "Starting Point: " + String.format("%12s", this.getCurrentPosition()) + "\t Travelled Distance: " + travelled_distance + " m\t Speed " +  vehicle_current_speed + " Km/h");
 			this._move(travelled_distance, this.getCurrentPosition());
 			break;
 		}

@@ -53,7 +53,7 @@ public class Logger {
 	 * @param msg - the message to be logged
 	 */
 	public static void trace(String sender, String msg) {
-		System.out.println(putCurrentTimestamp() + " TRACE [" + formatWithSpaces(sender,sender_spacing) + "] " + msg);
+		// System.out.println(putCurrentTimestamp() + " TRACE [" + formatWithSpaces(sender,sender_spacing) + "] " + msg);
 	}
 
 	protected static String formatWithSpaces(String msg, int size) {

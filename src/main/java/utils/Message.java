@@ -3,7 +3,7 @@ package main.java.utils;
 import org.json.JSONObject;
 
 /**
- * This class represents a message that can be sent through the MQTT broker, containing a type, a timestamp and the actual payload, called msg
+ * This class represents a message payload that can be sent through the MQTT broker, containing a type, a timestamp and the actual payload, called msg
  */
 public class Message {
     private final String type;

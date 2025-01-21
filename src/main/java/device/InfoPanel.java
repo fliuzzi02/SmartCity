@@ -2,6 +2,7 @@ package main.java.device;
 
 import main.java.utils.GlobalVars;
 import main.java.utils.Logger;
+import main.java.utils.MQTTMessage;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONObject;
 
@@ -52,10 +53,14 @@ public class InfoPanel extends Device{
         this.awsConnect("ampdveamdmijg-ats.iot.us-east-1.amazonaws.com",
                 "certs/99e3f3c36622033e6f14e23903f7bc75ed1770dcaf8f94f838a271f6beb94b5f-certificate.pem.crt",
                 "certs/99e3f3c36622033e6f14e23903f7bc75ed1770dcaf8f94f838a271f6beb94b5f-private.pem.key");
+
+        new Thread(this).start();
     }
 
     @Override
-    protected void onMessage(String topic, JSONObject payload) {
+    protected void handleMessage(MQTTMessage message){
+        String topic = message.getTopic();
+        JSONObject payload = message.getPayload().toJson();
         Logger.info(this.id, "Received message from " + topic + ": " + payload.toString());
 
         if (topic.endsWith("info")){

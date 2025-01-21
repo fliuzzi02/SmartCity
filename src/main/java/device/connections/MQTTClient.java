@@ -1,14 +1,11 @@
-package main.java.device;
+package main.java.device.connections;
 
-import main.java.utils.GlobalVars;
+import main.java.device.Device;
 import main.java.utils.Logger;
+import main.java.utils.MQTTMessage;
 import main.java.utils.Message;
 import org.eclipse.paho.client.mqttv3.*;
 import org.json.JSONObject;
-
-import java.util.UUID;
-
-import static java.lang.System.exit;
 
 /**
  * This class represents the MQTT Connection to the broker
@@ -20,30 +17,14 @@ public class MQTTClient implements MqttCallback {
     private final String clientId;
     private final MqttClient client;
 
-    MQTTClient(Device mydevice, String brokerAddress) throws MqttException {
+    public MQTTClient(Device mydevice, String brokerAddress) throws MqttException {
         this.myDevice = mydevice;
         this.address = brokerAddress;
         // Client id is the device id plus a random short UUID
-        this.clientId = myDevice.id + "-MQTT";
+        this.clientId = myDevice.getId() + "-MQTT";
         this.client = new MqttClient(this.address, this.clientId);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setCleanSession(true);
-        this.client.setTimeToWait(1000);
-        this.client.setCallback(this);
-        this.client.connect(options);
-        Logger.info(clientId, "Connected to broker at " + this.address);
-    }
-
-    MQTTClient(Device mydevice, String brokerAddress, String username, String password) throws MqttException {
-        this.myDevice = mydevice;
-        this.address = brokerAddress;
-        // Client id is the device id plus a random short UUID
-        this.clientId = myDevice.id + "-" + UUID.randomUUID().toString().substring(0, 5);
-        this.client = new MqttClient(this.address, this.clientId);
-        MqttConnectOptions options = new MqttConnectOptions();
-        options.setCleanSession(true);
-        options.setUserName(username);
-        options.setPassword(password.toCharArray());
         this.client.setCallback(this);
         this.client.connect(options);
         Logger.info(clientId, "Connected to broker at " + this.address);
@@ -93,10 +74,12 @@ public class MQTTClient implements MqttCallback {
         JSONObject payload;
         try {
             payload = new JSONObject(new String(mqttMessage.getPayload()));
-            this.myDevice.onMessage(s, payload);
         } catch (Exception e) {
             Logger.warn(clientId, "Error parsing message: " + e.getMessage());
+            return;
         }
+        MQTTMessage message = new MQTTMessage(s, new Message(payload));
+        myDevice.onMessage(message);
     }
 
     @Override
@@ -107,19 +90,5 @@ public class MQTTClient implements MqttCallback {
     @Override
     public void connectionLost(Throwable throwable) {
         Logger.error(clientId, "Connection lost: " + throwable.getMessage());
-    }
-
-    public static void main(String[] args) {
-        // Test the MQTTClient
-        try {
-            Device myDevice = new InfoPanel("test", "test", 0);
-            MQTTClient client = new MQTTClient(myDevice, GlobalVars.BROKER_ADDRESS);
-            Message message = Message.createTraffic("test", "sadnnead", "VEHICLE_IN", "ASDAS", 0);
-            client.publish(GlobalVars.BASE_TOPIC + "/road/" + "ASDAS" + "/traffic", message.toJson());
-            client.disconnect();
-            exit(0);
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
     }
 }

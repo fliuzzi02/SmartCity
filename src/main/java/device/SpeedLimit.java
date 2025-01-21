@@ -2,10 +2,13 @@ package main.java.device;
 
 import main.java.utils.GlobalVars;
 import main.java.utils.Logger;
+import main.java.utils.MQTTMessage;
 import main.java.utils.Message;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.json.JSONObject;
 
+/**
+ * This class represents a speed limit device that can be placed on a road segment
+ */
 public class SpeedLimit extends Device {
     private int speedLimit;
     private final String roadSegment;
@@ -24,13 +27,14 @@ public class SpeedLimit extends Device {
     public void init() throws MqttException {
         this.mqttConnect(GlobalVars.BROKER_ADDRESS);
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/step");
+        new Thread(this).start();
     }
 
     @Override
-    protected void onMessage(String topic, JSONObject payload) {
-        Message message = Message.createTrafficSignal(this.id, this.roadSegment, "SPEED_LIMIT", this.initialPosition, this.finalPosition, this.speedLimit);
+    protected void handleMessage(MQTTMessage message) {
+        Message response = Message.createTrafficSignal(this.id, this.roadSegment, "SPEED_LIMIT", this.initialPosition, this.finalPosition, this.speedLimit);
         try {
-            this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/signals", message.toJson());
+            this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/signals", response.toJson());
         } catch (MqttException e) {
             Logger.warn(this.id, "An error occurred: " + e.getMessage());
         }

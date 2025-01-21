@@ -2,6 +2,7 @@ package main.java.device;
 
 import main.java.utils.GlobalVars;
 import main.java.utils.Logger;
+import main.java.utils.MQTTMessage;
 import main.java.utils.Message;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONObject;
@@ -9,7 +10,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class RoadManager extends Device {
-
     ArrayList<SpeedLimit> speedLimits = new ArrayList<>();
 
     RoadManager(String id) {
@@ -21,22 +21,23 @@ public class RoadManager extends Device {
         this.mqttConnect(GlobalVars.BROKER_ADDRESS);
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/+/alerts");
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/+/info");
+        new Thread(this).start();
     }
 
     @Override
-    protected void onMessage(String topic, JSONObject payload) {
-        Message message = new Message(payload);
-        // Logger.debug(this.id, "Received message from " + topic + ": " + payload);
+    protected void handleMessage(MQTTMessage message) {
+        String topic = message.getTopic();
+        Message payload = message.getPayload();
 
         if(topic.endsWith("alerts")) {
             // Retransmit the alert to the info topic
             try {
-                this.connection.publish(topic.replace("alerts", "info"), message.toJson());
+                this.connection.publish(topic.replace("alerts", "info"), payload.toJson());
             } catch (MqttException e) {
                 Logger.error(this.id, "An error occurred: " + e.getMessage());
             }
         } else if (topic.endsWith("info")) {
-            handleStatus(message);
+            handleStatus(payload);
         }
     }
 

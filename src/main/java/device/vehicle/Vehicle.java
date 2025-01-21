@@ -1,22 +1,18 @@
 package main.java.device.vehicle;
 
-import main.java.utils.Accident;
 import main.java.device.Device;
 import main.java.device.vehicle.navigation.components.Navigator;
 import main.java.device.vehicle.navigation.components.RoadPoint;
 import main.java.device.vehicle.navigation.components.Route;
 import main.java.device.vehicle.navigation.interfaces.IRoadPoint;
 import main.java.device.vehicle.navigation.interfaces.IRoute;
-import main.java.utils.GlobalVars;
-import main.java.utils.Logger;
-import main.java.utils.Message;
+import main.java.utils.*;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONObject;
 
 import java.util.LinkedList;
 import java.util.Queue;
 
-import static java.lang.System.exit;
 import static main.java.utils.GlobalVars.STEP_MS;
 
 public class Vehicle extends Device {
@@ -43,6 +39,7 @@ public class Vehicle extends Device {
     public void init() throws MqttException {
         this.mqttConnect(GlobalVars.BROKER_ADDRESS);
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/step");
+        new Thread(this).start();
     }
 
     /**
@@ -80,18 +77,19 @@ public class Vehicle extends Device {
     }
 
     @Override
-    protected void onMessage(String topic, JSONObject payload) {
-        Logger.info(this.id, "Received message from " + topic + ": " + payload.toString());
-        Message message = new Message(payload);
-        switch (message.getType()) {
+    protected void handleMessage(MQTTMessage message) {
+        String topic = message.getTopic();
+        Message payload = message.getPayload();
+        Logger.trace(this.id, "Received message from " + topic + ": " + payload.toString());
+        switch (payload.getType()) {
             case "SIMULATOR_STEP":
                 handleSimulationStep();
                 break;
             case "TRAFFIC_SIGNAL":
-                handleTrafficSignal(message);
+                handleTrafficSignal(payload);
                 break;
             default:
-                Logger.warn(this.id, "Unknown message type: " + message.getType());
+                Logger.warn(this.id, "Unknown message type: " + payload.getType());
                 break;
         }
     }
@@ -145,7 +143,7 @@ public class Vehicle extends Device {
         updateSpeed();
         this.navigator.move(STEP_MS, actualSpeed);
 
-        // Logger.debug(this.id, "Moved to: " + this.navigator.getCurrentPosition());
+        Logger.info(this.id, "Moved to: " + this.navigator.getCurrentPosition());
 
         IRoadPoint position = this.navigator.getCurrentPosition();
         String roadSegment = position.getRoadSegment();
@@ -161,11 +159,10 @@ public class Vehicle extends Device {
                 Logger.error(this.id, "Error publishing VEHICLE_IN message: " + e.getMessage());
             }
         } else {
-            // Publish vehicle entering new segment
-            handleEntrance(position);
-
             // Publish vehicle leaving previous segment
             if(!lastSegment.equals("")) handleExit(new RoadPoint(lastSegment, lastPosition));
+            // Publish vehicle entering new segment
+            handleEntrance(position);
         }
 
         lastSegment = roadSegment;
@@ -173,6 +170,7 @@ public class Vehicle extends Device {
     }
 
     private void handleEntrance(IRoadPoint position) {
+        // TODO: Perform a REST call to get road status
         // Subscribe to new segment
         try {
             this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/signals");
@@ -224,7 +222,7 @@ public class Vehicle extends Device {
     void updateSpeed(){
         this.actualSpeed = Math.min(this.speedLimit, this.cruiseSpeed);
         if(redLight) this.actualSpeed = 0;
-        Logger.debug(this.id, "Speed updated to " + this.actualSpeed + " km/h");
+        Logger.trace(this.id, "Speed updated to " + this.actualSpeed + " km/h");
     }
 
     public enum VehicleRole {
@@ -237,32 +235,29 @@ public class Vehicle extends Device {
     }
 
     public static void main(String []args){
+        Route route = new Route();
+        route.addRouteFragment("R1s2", 0, 29);
+        route.addRouteFragment("R1s2a", 29, 320);
+        route.addRouteFragment("R5s1", 0, 300);
+
         RoadPoint initialPosition = new RoadPoint("R1s2", 0);
-        Vehicle vehicle = new Vehicle("3240KKK", VehicleRole.PrivateUsage, 10, initialPosition);
-        try {
-            vehicle.init();
+        for(int i=0; i<10; i++) {
+            try {
+                // Delay between vehicle creation
+                Thread.sleep(250);
 
-            // Set route
-            Route route = new Route();
-            route.addRouteFragment("R1s2", 0, 29);
-            route.addRouteFragment("R1s2a", 29, 320);
-            route.addRouteFragment("R5s1", 0, 300);
-            vehicle.setRoute(route);
+                Vehicle vehicle = new Vehicle("324"+i+"KKK", VehicleRole.PrivateUsage, 10, initialPosition);
+                vehicle.init();
+                vehicle.setRoute(route);
 
-            // Set speed
-            vehicle.setSpeed(50);
+                // Set speed
+                vehicle.setSpeed(50);
 
-            // Start route
-            vehicle.startRoute();
-
-            // Wait for 10 seconds
-            Thread.sleep(10000);
-            vehicle.notifyAccident();
-        } catch (MqttException | RoutingException e) {
-            Logger.error(vehicle.id, "An error occurred: " + e.getMessage());
-            exit(-1);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+                // Start route
+                vehicle.startRoute();
+            } catch (MqttException | RoutingException | InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 

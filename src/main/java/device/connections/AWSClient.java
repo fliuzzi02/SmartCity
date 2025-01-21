@@ -1,9 +1,12 @@
-package main.java.device;
+package main.java.device.connections;
 
 import com.amazonaws.services.iot.client.*;
 import com.amazonaws.services.iot.client.sample.sampleUtil.SampleUtil;
 import com.amazonaws.services.iot.client.sample.sampleUtil.SampleUtil.KeyStorePasswordPair;
+import main.java.device.Device;
 import main.java.utils.Logger;
+import main.java.utils.MQTTMessage;
+import main.java.utils.Message;
 import org.json.JSONObject;
 
 public class AWSClient {
@@ -14,9 +17,9 @@ public class AWSClient {
     private String certificateFile;
     private String privateKeyFile;
 
-    AWSClient(Device myDevice, String clientEndpoint, String certificateFile, String privateKeyFile) {
+    public AWSClient(Device myDevice, String clientEndpoint, String certificateFile, String privateKeyFile) {
         this.myDevice = myDevice;
-        this.clientId = myDevice.id + "-AWS";
+        this.clientId = myDevice.getId() + "-AWS";
         this.clientEndpoint = clientEndpoint;
         this.certificateFile = certificateFile;
         this.privateKeyFile = privateKeyFile;
@@ -70,9 +73,9 @@ public class AWSClient {
 
         @Override
         public void onMessage(AWSIotMessage message) {
-            JSONObject payload = new JSONObject(message.getStringPayload());
+            Message payload = new Message(new JSONObject(message.getStringPayload()));
             Logger.debug(clientId, "RECEIVED: " + payload);
-            myDevice.onMessage(message.getTopic(), payload);
+            myDevice.onMessage(new MQTTMessage(message.getTopic(), payload));
         }
     }
 }
