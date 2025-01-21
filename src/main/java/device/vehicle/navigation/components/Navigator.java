@@ -176,10 +176,9 @@ public class Navigator implements INavigator {
 		switch( this.getNavigatorStatus() ) {
 
 		case WAITING:
-		case STOPPED:
-		case REACHED_DESTINATION:
+		case STOPPED, REACHED_DESTINATION:
 			break;
-		case ROUTING:
+			case ROUTING:
 			int travelled_distance = (int)(milliseconds * vehicle_current_speed * 0.0002778 ); // 1 seg -> m = speed*1000/3600
 			MySimpleLogger.trace(this.getId(), "Starting Point: " + String.format("%12s", this.getCurrentPosition()) + "\t Travelled Distance: " + travelled_distance + " m\t Speed " +  vehicle_current_speed + " Km/h");
 			this._move(travelled_distance, this.getCurrentPosition());
