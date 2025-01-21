@@ -51,9 +51,9 @@ public class InfoPanel extends Device{
         this.awsConnect("ampdveamdmijg-ats.iot.us-east-1.amazonaws.com",
                 "certs/99e3f3c36622033e6f14e23903f7bc75ed1770dcaf8f94f838a271f6beb94b5f-certificate.pem.crt",
                 "certs/99e3f3c36622033e6f14e23903f7bc75ed1770dcaf8f94f838a271f6beb94b5f-private.pem.key");
-        this.awsConnection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/info");
-        this.awsConnection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/alerts");
-        this.awsConnection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/traffic");
+        this.awsConnection.subscribe("road/" + this.roadSegment + "/info");
+        this.awsConnection.subscribe("road/" + this.roadSegment + "/alerts");
+        this.awsConnection.subscribe("road/" + this.roadSegment + "/traffic");
     }
 
     @Override

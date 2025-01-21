@@ -22,6 +22,11 @@ public class AWSClient {
         this.privateKeyFile = privateKeyFile;
         KeyStorePasswordPair pair = SampleUtil.getKeyStorePasswordPair(certificateFile, privateKeyFile);
         this.client = new AWSIotMqttClient(clientEndpoint, this.clientId, pair.keyStore, pair.keyPassword);
+        try {
+            this.client.connect();
+        } catch (AWSIotException e) {
+            Logger.error(this.clientId, "Error connecting to AWS: " + e.getMessage());
+        }
     }
 
     public void subscribe(String topic) {
