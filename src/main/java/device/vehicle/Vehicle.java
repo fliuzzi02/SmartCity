@@ -10,6 +10,10 @@ import main.java.utils.*;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -24,7 +28,6 @@ public class Vehicle extends Device {
     private boolean redLight = false;
     private String lastSegment = "";
     private int lastPosition = -1;
-    //FIFO Queue of Strings
     private final Queue<Accident> accidentList = new LinkedList<>();
 
     Vehicle(String id, VehicleRole role, int initialSpeed, RoadPoint initialPosition) {
@@ -89,7 +92,7 @@ public class Vehicle extends Device {
                 handleTrafficSignal(payload);
                 break;
             default:
-                Logger.warn(this.id, "Unknown message type: " + payload.getType());
+                Logger.trace(this.id, "Unknown message type: " + payload.getType());
                 break;
         }
     }
@@ -119,8 +122,9 @@ public class Vehicle extends Device {
 
     private void handleTrafficSignal(Message message) {
         JSONObject msg = message.getMsg();
+        Logger.debug(this.id, "Received traffic signal: " + msg.toString());
 
-        if(msg.getString("signal-type").equals("SPEED-LIMIT")){
+        if(msg.getString("signal-type").equals("SPEED_LIMIT")){
             // If the vehicle is in the range of the speed limit, set the speed limit accordingly
             int start = msg.getInt("starting-position");
             int end = msg.getInt("ending-position");
@@ -128,7 +132,7 @@ public class Vehicle extends Device {
             if(this.navigator.getCurrentPosition().getPosition() >= start && this.navigator.getCurrentPosition().getPosition() <= end){
                 this.speedLimit = limit;
             }
-        } else if (msg.getString("signal-type").equals("TRAFFIC-LIGHT")){
+        } else if (msg.getString("signal-type").equals("TRAFFIC_LIGHT")){
             // If the vehicle is in the range of the traffic light that is red (HLL) and within 50m, set the speed to 0
             int start = msg.getInt("starting-position");
             if(this.navigator.getCurrentPosition().getPosition() >= start-50 && this.navigator.getCurrentPosition().getPosition() <= start + 50){
@@ -141,7 +145,9 @@ public class Vehicle extends Device {
     private void handleSimulationStep(){
         // When receiving a step message, move vehicle and update position
         updateSpeed();
-        this.navigator.move(STEP_MS, actualSpeed);
+        if(this.navigator.isRouting())
+            this.navigator.move(STEP_MS, actualSpeed);
+
 
         Logger.info(this.id, "Moved to: " + this.navigator.getCurrentPosition());
 
@@ -170,11 +176,13 @@ public class Vehicle extends Device {
     }
 
     private void handleEntrance(IRoadPoint position) {
-        // TODO: Perform a REST call to get road status
+        // Update current speed limit of the road segment
+        JSONObject roadStatus = getRoadStatus(position.getRoadSegment());
+        this.speedLimit = roadStatus.getInt("current-max-speed");
+
         // Subscribe to new segment
         try {
             this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/signals");
-            this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/traffic");
             this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/alerts");
         } catch (MqttException e) {
             throw new RuntimeException(e);
@@ -197,7 +205,6 @@ public class Vehicle extends Device {
         // Unsubscribe from previous segment
         try {
             this.connection.unsubscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/signals");
-            this.connection.unsubscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/traffic");
             this.connection.unsubscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/alerts");
         } catch (MqttException e) {
             throw new RuntimeException(e);
@@ -216,13 +223,42 @@ public class Vehicle extends Device {
         Logger.debug(this.id, "Exited road segment " + roadSegment);
     }
 
+    private JSONObject getRoadStatus(String roadSegment){
+        JSONObject result = new JSONObject();
+        try {
+            URL url = new URL("http://tambori.dsic.upv.es:10082/segment/" + roadSegment);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+            StringBuilder sb = new StringBuilder();
+            String output;
+            while ((output = br.readLine()) != null) {
+                sb.append(output);
+            }
+            conn.disconnect();
+
+            result = new JSONObject(sb.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Logger.debug(this.id, "Road status for " + roadSegment + ": " + result.toString());
+        return result;
+    }
+
     /**
      * Updates the actual speed of the vehicle to the maximum of the speed limit and the cruise speed
      */
     void updateSpeed(){
         this.actualSpeed = Math.min(this.speedLimit, this.cruiseSpeed);
         if(redLight) this.actualSpeed = 0;
-        Logger.trace(this.id, "Speed updated to " + this.actualSpeed + " km/h");
+        Logger.debug(this.id, "Speed updated to " + this.actualSpeed + " km/h");
     }
 
     public enum VehicleRole {
@@ -235,27 +271,29 @@ public class Vehicle extends Device {
     }
 
     public static void main(String []args){
-        Route route = new Route();
-        route.addRouteFragment("R1s2", 0, 29);
-        route.addRouteFragment("R1s2a", 29, 320);
-        route.addRouteFragment("R5s1", 0, 300);
 
         RoadPoint initialPosition = new RoadPoint("R1s2", 0);
-        for(int i=0; i<10; i++) {
+        for(int i=0; i<5; i++) {
             try {
-                // Delay between vehicle creation
-                Thread.sleep(250);
+                // format int number to have 4 digits
+                String vehicleID = String.format("%04d", i)+ "AAA";
 
-                Vehicle vehicle = new Vehicle("324"+i+"KKK", VehicleRole.PrivateUsage, 10, initialPosition);
+                Vehicle vehicle = new Vehicle(vehicleID, VehicleRole.PrivateUsage, 10, initialPosition);
                 vehicle.init();
+
+                // Set route
+                Route route = new Route();
+                route.addRouteFragment("R1s2", 0, 29);
+                route.addRouteFragment("R1s2a", 29, 320);
+                route.addRouteFragment("R5s1", 0, 300);
                 vehicle.setRoute(route);
 
                 // Set speed
-                vehicle.setSpeed(50);
+                vehicle.setSpeed(80);
 
                 // Start route
                 vehicle.startRoute();
-            } catch (MqttException | RoutingException | InterruptedException e) {
+            } catch (MqttException | RoutingException e) {
                 e.printStackTrace();
             }
         }
