@@ -62,7 +62,7 @@ public class RoadManager extends Device {
             case "Collapsed":
                 speedLimit = 20;
                 break;
-            case "Limited_Manouvers":
+            case "Restricted_Manouvers":
                 speedLimit -= 20;
                 break;
             case "Free_Flow":
@@ -108,6 +108,7 @@ public class RoadManager extends Device {
             if(sl.getRoadSegment().equals(roadSegment)) {
                 sl.unregister();
                 speedLimits.remove(sl);
+                Logger.debug(this.id, "Removed speed limit for road segment " + roadSegment);
                 return;
             }
         }
