@@ -47,6 +47,13 @@ public class InfoPanel extends Device{
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/info");
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/alerts");
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/traffic");
+
+        this.awsConnect("ampdveamdmijg-ats.iot.us-east-1.amazonaws.com",
+                "certs/99e3f3c36622033e6f14e23903f7bc75ed1770dcaf8f94f838a271f6beb94b5f-certificate.pem.crt",
+                "certs/99e3f3c36622033e6f14e23903f7bc75ed1770dcaf8f94f838a271f6beb94b5f-private.pem.key");
+        this.awsConnection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/info");
+        this.awsConnection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/alerts");
+        this.awsConnection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/traffic");
     }
 
     @Override
@@ -68,13 +75,17 @@ public class InfoPanel extends Device{
             JSONObject msg = payload.getJSONObject("msg");
             String status = msg.getString("status");
 
-            // TODO: Maybe add a default case
             switch (status) {
                 case "Free_Flow", "Mostly_Free_Flow" -> this.trafficStatus = FunctionStatus.OFF;
                 case "Limited_Manouvers" -> this.trafficStatus = FunctionStatus.BLINK;
                 case "No_Manouvers", "Collapsed" -> this.trafficStatus = FunctionStatus.ON;
             }
 
+            JSONObject update = new JSONObject();
+            update.put("f1", this.trafficStatus.name());
+            update.put("f2", this.accidentStatus.name());
+            update.put("f3", this.circulationStatus.name());
+            this.awsConnection.publish("status", update);
             Logger.info(this.id, "Traffic congestion status: " + this.trafficStatus);
         }
     }
