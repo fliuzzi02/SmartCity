@@ -57,13 +57,15 @@ public class RoadManager extends Device {
         Logger.debug(this.id, "Received status: " + roadStatus + " for road segment " + roadSegment + " with speed limit " + speedLimit);
 
         switch (roadStatus) {
-            case "No_Manouvers", "Collapsed":
+            case "No_Manouvers":
+            case "Collapsed":
                 speedLimit = 20;
                 break;
             case "Limited_Manouvers":
                 speedLimit -= 20;
                 break;
-            case "Free_Flow", "Mostly_Free_Flow":
+            case "Free_Flow":
+            case "Mostly_Free_Flow":
                 speedLimit = 999;
                 break;
             default:

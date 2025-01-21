@@ -84,9 +84,15 @@ public class Vehicle extends Device {
         Logger.info(this.id, "Received message from " + topic + ": " + payload.toString());
         Message message = new Message(payload);
         switch (message.getType()) {
-            case "SIMULATOR_STEP" -> handleSimulationStep();
-            case "TRAFFIC_SIGNAL" -> handleTrafficSignal(message);
-            default -> Logger.warn(this.id, "Unknown message type: " + message.getType());
+            case "SIMULATOR_STEP":
+                handleSimulationStep();
+                break;
+            case "TRAFFIC_SIGNAL":
+                handleTrafficSignal(message);
+                break;
+            default:
+                Logger.warn(this.id, "Unknown message type: " + message.getType());
+                break;
         }
     }
 

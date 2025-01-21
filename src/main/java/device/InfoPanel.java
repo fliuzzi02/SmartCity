@@ -80,9 +80,17 @@ public class InfoPanel extends Device{
             String status = msg.getString("status");
 
             switch (status) {
-                case "Free_Flow", "Mostly_Free_Flow" -> this.trafficStatus = FunctionStatus.OFF;
-                case "Limited_Manouvers" -> this.trafficStatus = FunctionStatus.BLINK;
-                case "No_Manouvers", "Collapsed" -> this.trafficStatus = FunctionStatus.ON;
+                case "Free_Flow":
+                case "Mostly_Free_Flow":
+                    this.trafficStatus = FunctionStatus.OFF;
+                    break;
+                case "Limited_Manouvers":
+                    this.trafficStatus = FunctionStatus.BLINK;
+                    break;
+                case "No_Manouvers":
+                case "Collapsed":
+                    this.trafficStatus = FunctionStatus.ON;
+                    break;
             }
 
             Logger.info(this.id, "Traffic congestion status: " + this.trafficStatus);

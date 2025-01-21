@@ -171,25 +171,23 @@ public class Navigator implements INavigator {
    
 
 
-   @Override
-   public INavigator move(long milliseconds, int vehicle_current_speed) {
-	   	   
-	  switch( this.getNavigatorStatus() ) {
-	  
-	  case WAITING:
-	  case STOPPED, REACHED_DESTINATION:
-		  break;
+	@Override
+	public INavigator move(long milliseconds, int vehicle_current_speed) {
+		switch( this.getNavigatorStatus() ) {
 
-		  case ROUTING:
-		  
-		  int travelled_distance = (int)(milliseconds * vehicle_current_speed * 0.0002778 ); // 1 seg -> m = speed*1000/3600
-		  MySimpleLogger.debug(this.getId(), "Starting Point: " + String.format("%12s", this.getCurrentPosition()) + "\t Travelled Distance: " + travelled_distance + " m\t Speed " +  vehicle_current_speed + " Km/h");
-		  this._move(travelled_distance, this.getCurrentPosition());
-		  break;
-	  }
-	   
-      return this;
-   }
+		case WAITING:
+		case STOPPED:
+		case REACHED_DESTINATION:
+			break;
+		case ROUTING:
+			int travelled_distance = (int)(milliseconds * vehicle_current_speed * 0.0002778 ); // 1 seg -> m = speed*1000/3600
+			MySimpleLogger.debug(this.getId(), "Starting Point: " + String.format("%12s", this.getCurrentPosition()) + "\t Travelled Distance: " + travelled_distance + " m\t Speed " +  vehicle_current_speed + " Km/h");
+			this._move(travelled_distance, this.getCurrentPosition());
+			break;
+		}
+
+		return this;
+	}
       
    
    protected INavigator _move(int distance, IRoadPoint posicionActual) {

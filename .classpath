@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-19"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="lib/aws-iot-device-sdk-java-1.3.2.jar"/>
-	<classpathentry kind="lib" path="lib/aws-iot-device-sdk-java-samples-1.3.2.jar"/>
-	<classpathentry kind="lib" path="lib/json-20240303-javadoc.jar"/>
-	<classpathentry kind="lib" path="lib/org.apache.commons.codec_1.10.0.v20180409-1845.jar"/>
-	<classpathentry kind="lib" path="lib/org.eclipse.paho.client.mqttv3-1.2.0.jar"/>
+	<classpathentry kind="lib" path="C:\Users\Federico\OneDrive\Desktop\PoliMi\INA - Inteligencia Ambiental\07 - Part 2 - Proyecto 2\SmartCity\lib\json-20240303.jar"/>
+	<classpathentry kind="lib" path="c:/Users/Federico/OneDrive/Desktop/PoliMi/INA - Inteligencia Ambiental/07 - Part 2 - Proyecto 2/SmartCity/lib/aws-iot-device-sdk-java-1.3.2.jar"/>
+	<classpathentry kind="lib" path="c:/Users/Federico/OneDrive/Desktop/PoliMi/INA - Inteligencia Ambiental/07 - Part 2 - Proyecto 2/SmartCity/lib/aws-iot-device-sdk-java-samples-1.3.2.jar"/>
+	<classpathentry kind="lib" path="c:/Users/Federico/OneDrive/Desktop/PoliMi/INA - Inteligencia Ambiental/07 - Part 2 - Proyecto 2/SmartCity/lib/json-20240303-javadoc.jar"/>
+	<classpathentry kind="lib" path="c:/Users/Federico/OneDrive/Desktop/PoliMi/INA - Inteligencia Ambiental/07 - Part 2 - Proyecto 2/SmartCity/lib/org.apache.commons.codec_1.10.0.v20180409-1845.jar"/>
+	<classpathentry kind="lib" path="c:/Users/Federico/OneDrive/Desktop/PoliMi/INA - Inteligencia Ambiental/07 - Part 2 - Proyecto 2/SmartCity/lib/org.eclipse.paho.client.mqttv3-1.2.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
