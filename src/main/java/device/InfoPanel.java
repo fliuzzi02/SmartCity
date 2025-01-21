@@ -47,13 +47,11 @@ public class InfoPanel extends Device{
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/info");
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/alerts");
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/traffic");
+        this.connection.subscribe(GlobalVars.BASE_TOPIC + "/step");
 
         this.awsConnect("ampdveamdmijg-ats.iot.us-east-1.amazonaws.com",
                 "certs/99e3f3c36622033e6f14e23903f7bc75ed1770dcaf8f94f838a271f6beb94b5f-certificate.pem.crt",
                 "certs/99e3f3c36622033e6f14e23903f7bc75ed1770dcaf8f94f838a271f6beb94b5f-private.pem.key");
-        this.awsConnection.subscribe("road/" + this.roadSegment + "/info");
-        this.awsConnection.subscribe("road/" + this.roadSegment + "/alerts");
-        this.awsConnection.subscribe("road/" + this.roadSegment + "/traffic");
     }
 
     @Override
@@ -66,6 +64,12 @@ public class InfoPanel extends Device{
             updateAccident(payload);
         } else if (topic.endsWith("traffic")){
             updateCirculation(payload);
+        } else if (topic.endsWith("step")){
+            JSONObject update = new JSONObject();
+            update.put("f1", this.trafficStatus.name());
+            update.put("f2", this.accidentStatus.name());
+            update.put("f3", this.circulationStatus.name());
+            this.awsConnection.publish("status", update);
         }
     }
 
@@ -81,11 +85,6 @@ public class InfoPanel extends Device{
                 case "No_Manouvers", "Collapsed" -> this.trafficStatus = FunctionStatus.ON;
             }
 
-            JSONObject update = new JSONObject();
-            update.put("f1", this.trafficStatus.name());
-            update.put("f2", this.accidentStatus.name());
-            update.put("f3", this.circulationStatus.name());
-            this.awsConnection.publish("status", update);
             Logger.info(this.id, "Traffic congestion status: " + this.trafficStatus);
         }
     }
