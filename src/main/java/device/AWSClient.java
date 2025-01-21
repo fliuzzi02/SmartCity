@@ -6,8 +6,6 @@ import com.amazonaws.services.iot.client.sample.sampleUtil.SampleUtil.KeyStorePa
 import main.java.utils.Logger;
 import org.json.JSONObject;
 
-import java.util.UUID;
-
 public class AWSClient {
     private AWSIotMqttClient client;
     protected Device myDevice;
@@ -18,7 +16,7 @@ public class AWSClient {
 
     AWSClient(Device myDevice, String clientEndpoint, String certificateFile, String privateKeyFile) {
         this.myDevice = myDevice;
-        this.clientId = myDevice.id + "-AWS" + UUID.randomUUID().toString().substring(0, 5);
+        this.clientId = myDevice.id + "-AWS";
         this.clientEndpoint = clientEndpoint;
         this.certificateFile = certificateFile;
         this.privateKeyFile = privateKeyFile;

@@ -24,7 +24,7 @@ public class MQTTClient implements MqttCallback {
         this.myDevice = mydevice;
         this.address = brokerAddress;
         // Client id is the device id plus a random short UUID
-        this.clientId = myDevice.id + "-" + UUID.randomUUID().toString().substring(0, 5);
+        this.clientId = myDevice.id + "-MQTT";
         this.client = new MqttClient(this.address, this.clientId);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setCleanSession(true);
