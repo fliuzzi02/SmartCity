@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import static java.lang.Math.abs;
+import static main.java.utils.GlobalVars.getRoadStatus;
 
 /**
  * This class represents an InfoPanel device
@@ -33,7 +34,7 @@ public class InfoPanel extends Device{
      * @param roadSegment name of the segment where the panel is located
      * @param position position in meters at which the panel is located
      */
-    InfoPanel(String id, String roadSegment, int position) {
+    public InfoPanel(String id, String roadSegment, int position) {
         super(id);
         this.roadSegment = roadSegment;
         this.trafficStatus = FunctionStatus.OFF;
@@ -54,6 +55,10 @@ public class InfoPanel extends Device{
                 "certs/99e3f3c36622033e6f14e23903f7bc75ed1770dcaf8f94f838a271f6beb94b5f-certificate.pem.crt",
                 "certs/99e3f3c36622033e6f14e23903f7bc75ed1770dcaf8f94f838a271f6beb94b5f-private.pem.key");
 
+        // Get initial status of road segment
+        JSONObject status = getRoadStatus(this.roadSegment);
+        handleRoadStatus(status);
+
         new Thread(this).start();
     }
 
@@ -61,7 +66,7 @@ public class InfoPanel extends Device{
     protected void handleMessage(MQTTMessage message){
         String topic = message.getTopic();
         JSONObject payload = message.getPayload().toJson();
-        Logger.info(this.id, "Received message from " + topic + ": " + payload.toString());
+        Logger.trace(this.id, "Received message from " + topic + ": " + payload.toString());
 
         if (topic.endsWith("info")){
             updateTrafficCongestion(payload);
@@ -82,24 +87,28 @@ public class InfoPanel extends Device{
         String type = payload.getString("type");
         if (type.equals("ROAD_STATUS")) {
             JSONObject msg = payload.getJSONObject("msg");
-            String status = msg.getString("status");
-
-            switch (status) {
-                case "Free_Flow":
-                case "Mostly_Free_Flow":
-                    this.trafficStatus = FunctionStatus.OFF;
-                    break;
-                case "Limited_Manouvers":
-                    this.trafficStatus = FunctionStatus.BLINK;
-                    break;
-                case "No_Manouvers":
-                case "Collapsed":
-                    this.trafficStatus = FunctionStatus.ON;
-                    break;
-            }
-
-            Logger.info(this.id, "Traffic congestion status: " + this.trafficStatus);
+            handleRoadStatus(msg);
         }
+    }
+
+    private void handleRoadStatus(JSONObject msg){
+        String status = msg.getString("status");
+
+        switch (status) {
+            case "Free_Flow":
+            case "Mostly_Free_Flow":
+                this.trafficStatus = FunctionStatus.OFF;
+                break;
+            case "Limited_Manouvers":
+                this.trafficStatus = FunctionStatus.BLINK;
+                break;
+            case "No_Manouvers":
+            case "Collapsed":
+                this.trafficStatus = FunctionStatus.ON;
+                break;
+        }
+
+        Logger.info(this.id, "Traffic congestion status: " + this.trafficStatus);
     }
 
     private void updateAccident(JSONObject payload){
@@ -147,9 +156,8 @@ public class InfoPanel extends Device{
                         circulationStatus = FunctionStatus.ON;
                     }
                 }
+                Logger.info(this.id, "Reserved circulation status: " + this.circulationStatus);
             }
-
-            Logger.info(this.id, "Reserved circulation status: " + this.circulationStatus);
         }
     }
 

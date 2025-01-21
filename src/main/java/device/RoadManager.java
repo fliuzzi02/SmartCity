@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class RoadManager extends Device {
     ArrayList<SpeedLimit> speedLimits = new ArrayList<>();
 
-    RoadManager(String id) {
+    public RoadManager(String id) {
         super(id);
     }
 
@@ -62,6 +62,7 @@ public class RoadManager extends Device {
             case "Collapsed":
                 speedLimit = 20;
                 break;
+            case "Limited_Manouvers":
             case "Restricted_Manouvers":
                 speedLimit -= 20;
                 break;

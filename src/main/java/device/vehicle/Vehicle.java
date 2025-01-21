@@ -10,14 +10,11 @@ import main.java.utils.*;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.LinkedList;
 import java.util.Queue;
 
 import static main.java.utils.GlobalVars.STEP_MS;
+import static main.java.utils.GlobalVars.getRoadStatus;
 
 public class Vehicle extends Device {
     private final VehicleRole role;
@@ -30,7 +27,7 @@ public class Vehicle extends Device {
     private int lastPosition = -1;
     private final Queue<Accident> accidentList = new LinkedList<>();
 
-    Vehicle(String id, VehicleRole role, int initialSpeed, RoadPoint initialPosition) {
+    public Vehicle(String id, VehicleRole role, int initialSpeed, RoadPoint initialPosition) {
         super(id);
         this.role = role;
         this.navigator = new Navigator(id+"-navigator");
@@ -120,6 +117,18 @@ public class Vehicle extends Device {
         this.navigator.startRouting();
     }
 
+    public boolean reachedDestination(){
+        return this.navigator.getDestinationPoint().equals(this.navigator.getCurrentPosition());
+    }
+
+    public void exitRoad() {
+        IRoadPoint position = this.navigator.getCurrentPosition();
+        this.navigator.stopRouting();
+
+        // Notify that the vehicle is leaving the road
+        handleExit(position);
+    }
+
     private void handleTrafficSignal(Message message) {
         JSONObject msg = message.getMsg();
         Logger.debug(this.id, "Received traffic signal: " + msg.toString());
@@ -143,10 +152,11 @@ public class Vehicle extends Device {
     }
 
     private void handleSimulationStep(){
-        // When receiving a step message, move vehicle and update position
+        if(!this.navigator.isRouting() || (this.navigator.getDestinationPoint().equals(this.navigator.getCurrentPosition())))
+            return;
+
         updateSpeed();
-        if(this.navigator.isRouting())
-            this.navigator.move(STEP_MS, actualSpeed);
+        this.navigator.move(STEP_MS, actualSpeed);
 
 
         Logger.info(this.id, "Moved to: " + this.navigator.getCurrentPosition());
@@ -223,35 +233,6 @@ public class Vehicle extends Device {
         Logger.debug(this.id, "Exited road segment " + roadSegment);
     }
 
-    private JSONObject getRoadStatus(String roadSegment){
-        JSONObject result = new JSONObject();
-        try {
-            URL url = new URL("http://tambori.dsic.upv.es:10082/segment/" + roadSegment);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Accept", "application/json");
-
-            if (conn.getResponseCode() != 200) {
-                throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
-            }
-
-            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
-            StringBuilder sb = new StringBuilder();
-            String output;
-            while ((output = br.readLine()) != null) {
-                sb.append(output);
-            }
-            conn.disconnect();
-
-            result = new JSONObject(sb.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        Logger.debug(this.id, "Road status for " + roadSegment + ": " + result.toString());
-        return result;
-    }
-
     /**
      * Updates the actual speed of the vehicle to the maximum of the speed limit and the cruise speed
      */
@@ -267,7 +248,7 @@ public class Vehicle extends Device {
         Taxi{final String name = "Taxi";},
         Ambulance{final String name = "Ambulance";},
         Police{final String name = "Police";},
-        FireTruck{final String name = "Fire-Truck";};
+        FireTruck{final String name = "Fire-Truck";}
     }
 
     public static void main(String []args){
