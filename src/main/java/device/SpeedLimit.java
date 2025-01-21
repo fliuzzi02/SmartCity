@@ -32,7 +32,7 @@ public class SpeedLimit extends Device {
         try {
             this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/signals", message.toJson());
         } catch (MqttException e) {
-            Logger.error(this.id, "An error occurred: " + e.getMessage());
+            Logger.warn(this.id, "An error occurred: " + e.getMessage());
         }
     }
 

@@ -54,6 +54,8 @@ public class RoadManager extends Device {
         int endKm = msg.getInt("end-kp");
         int speedLimit = msg.getInt("max-speed");
 
+        Logger.debug(this.id, "Received status: " + roadStatus + " for road segment " + roadSegment + " with speed limit " + speedLimit);
+
         switch (roadStatus) {
             case "No_Manouvers", "Collapsed":
                 speedLimit = 20;
@@ -85,10 +87,11 @@ public class RoadManager extends Device {
 
         // Otherwise, create a new speed limit
         createSpeedLimit(roadSegment, startKm, endKm, speedLimit);
+        Logger.debug(this.id, "Created speed limit for road segment " + roadSegment + " with speed limit " + speedLimit);
     }
 
     private void createSpeedLimit(String roadSegment, int startKm, int endKm, int speedLimit) {
-        SpeedLimit sl = new SpeedLimit(this.id + "-" + roadSegment, speedLimit, roadSegment, startKm, endKm);
+        SpeedLimit sl = new SpeedLimit("SL-" + roadSegment, speedLimit, roadSegment, startKm, endKm);
         speedLimits.add(sl);
         try {
             sl.init();
