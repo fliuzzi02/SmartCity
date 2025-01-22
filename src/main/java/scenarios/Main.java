@@ -2,6 +2,7 @@ package main.java.scenarios;
 
 import main.java.device.InfoPanel;
 import main.java.device.RoadManager;
+import main.java.device.vehicle.SpecialVehicle;
 import main.java.device.vehicle.Vehicle;
 import main.java.device.vehicle.navigation.components.RoadPoint;
 import main.java.device.vehicle.navigation.components.Route;
@@ -10,8 +11,16 @@ import main.java.utils.GlobalVars;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class CongestionIncrementDecrement {
+public class Main {
     public static void main(String[] args) throws Exception{
+        // congestionScenario();
+        infoPanelTesting();
+    }
+
+    /**
+     * Scenario where congestion is incremented and then decremented
+     */
+    private static void congestionScenario() throws Exception {
         // Create manager
         RoadManager manager = new RoadManager("RM-1");
         // Create info panel
@@ -46,5 +55,28 @@ public class CongestionIncrementDecrement {
             vehicle.stop();
             Thread.sleep(1000);
         }
+    }
+
+    /**
+     * Scenario where an ambulance is sent down the road and the info panel shows its passing by
+     * @throws Exception
+     */
+    private static void infoPanelTesting() throws Exception {
+        InfoPanel infoPanel = new InfoPanel("IP-R5s1", "R5s1", 290, GlobalVars.AWS_ENDPOINT, GlobalVars.GLOBAL_CERT, GlobalVars.GLOBAL_KEY);
+        infoPanel.init();
+
+        // Test f3 function by sending Ambulance
+        SpecialVehicle ambulance = new SpecialVehicle("8924KNX", Vehicle.VehicleRole.Ambulance, 100, new RoadPoint("R5s1", 0), GlobalVars.AWS_ENDPOINT, GlobalVars.VE_CERTIFICATE, GlobalVars.VE_KEY);
+
+        Route route = new Route();
+        route.addRouteFragment("R5s1", 0, 580);
+        ambulance.setRoute(route);
+        ambulance.startRoute();
+        ambulance.init();
+        while(!ambulance.reachedDestination()) {
+            Thread.sleep(1000);
+        }
+        ambulance.exitRoad();
+        ambulance.stop();
     }
 }
