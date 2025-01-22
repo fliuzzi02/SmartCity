@@ -64,6 +64,7 @@ public class Vehicle extends Device {
         Message message = Message.createAccident(accidentID, "OPEN", this.id, segment, position);
         try {
             this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + segment + "/alerts", message.toJson());
+            this.awsConnection.publish("vehicles/"+this.id+"/alerts", message.toJson());
         } catch (MqttException e) {
             Logger.error(this.id, "Error publishing ACCIDENT message: " + e.getMessage());
         }
@@ -78,6 +79,7 @@ public class Vehicle extends Device {
             Message message = Message.createAccident(oldestAccident.getId(), "CLOSED", this.id, oldestAccident.getSegment(), oldestAccident.getPosition());
             try {
                 this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + oldestAccident.getSegment() + "/alerts", message.toJson());
+                this.awsConnection.publish("vehicles/"+this.id+"/alerts", message.toJson());
             } catch (MqttException e) {
                 Logger.error(this.id, "Error publishing ACCIDENT message: " + e.getMessage());
             }
