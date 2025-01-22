@@ -30,11 +30,51 @@
         },
         {
             "type": "java",
-            "name": "Panel1",
+            "name": "Congestion Scenario",
             "request": "launch",
-            "mainClass": "main.java.device.InfoPanel",
+            "mainClass": "main.java.utils.Main",
             "projectName": "SmartCity",
-            "args": ["Panel1", "R1s1", 1500]
+            "args": ["--congestion", 20, "R1s1", 0]
+        },
+        {
+            "type": "java",
+            "name": "Info Panel Testing",
+            "request": "launch",
+            "mainClass": "main.java.utils.Main",
+            "projectName": "SmartCity",
+            "args": ["--infoPanelTesting"]
+        },
+        {
+            "type": "java",
+            "name": "Accident Scenario",
+            "request": "launch",
+            "mainClass": "main.java.utils.Main",
+            "projectName": "SmartCity",
+            "args": ["--accident"]
+        },
+        {
+            "type": "java",
+            "name": "Create Managers",
+            "request": "launch",
+            "mainClass": "main.java.utils.Main",
+            "projectName": "SmartCity",
+            "args": ["--createManagers"]
+        },
+        {
+            "type": "java",
+            "name": "Create Info Panel",
+            "request": "launch",
+            "mainClass": "main.java.utils.Main",
+            "projectName": "SmartCity",
+            "args": ["--createInfoPanel", "R5s1", 290]
+        },
+        {
+            "type": "java",
+            "name": "Create Vehicle",
+            "request": "launch",
+            "mainClass": "main.java.utils.Main",
+            "projectName": "SmartCity",
+            "args": ["--createVehicle", "6942ABC", "PrivateUsage", 50, "R5s1,0,580;"]
         }
     ]
 }

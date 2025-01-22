@@ -176,7 +176,8 @@ public class Navigator implements INavigator {
 		switch( this.getNavigatorStatus() ) {
 
 		case WAITING:
-		case STOPPED, REACHED_DESTINATION:
+		case STOPPED:
+		case REACHED_DESTINATION:
 			break;
 			case ROUTING:
 			int travelled_distance = (int)(milliseconds * vehicle_current_speed * 0.0002778 ); // 1 seg -> m = speed*1000/3600
