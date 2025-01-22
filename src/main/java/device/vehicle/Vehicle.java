@@ -68,6 +68,10 @@ public class Vehicle extends Device {
         } catch (MqttException e) {
             Logger.error(this.id, "Error publishing ACCIDENT message: " + e.getMessage());
         }
+
+        // This vehicle was in an accident, so it should stop
+        setSpeed(0);
+        updateSpeed();
     }
 
     /**
@@ -115,7 +119,7 @@ public class Vehicle extends Device {
 
     private void handleAccident(Message payload) {
         JSONObject msg = payload.getMsg();
-        String accidentID = msg.getString("accident-id");
+        String accidentID = msg.getString("id");
         String status = msg.getString("status");
         String segment = msg.getString("segment");
         int position = msg.getInt("position");
@@ -164,7 +168,6 @@ public class Vehicle extends Device {
 
     private void handleTrafficSignal(Message message) {
         JSONObject msg = message.getMsg();
-        Logger.debug(this.id, "Received traffic signal: " + msg.toString());
 
         if(msg.getString("signal-type").equals("SPEED_LIMIT")){
             // If the vehicle is in the range of the speed limit, set the speed limit accordingly
@@ -173,6 +176,7 @@ public class Vehicle extends Device {
             int limit = msg.getInt("value");
             if(this.navigator.getCurrentPosition().getPosition() >= start && this.navigator.getCurrentPosition().getPosition() <= end){
                 this.speedLimit = limit;
+                Logger.info(this.id, "Recieved signal " + msg.getString("signal-type") + ": "+ limit + " km/h");
             }
         } else if (msg.getString("signal-type").equals("TRAFFIC_LIGHT")){
             // If the vehicle is in the range of the traffic light that is red (HLL) and within 50m, set the speed to 0
@@ -180,6 +184,7 @@ public class Vehicle extends Device {
             if(this.navigator.getCurrentPosition().getPosition() >= start-50 && this.navigator.getCurrentPosition().getPosition() <= start + 50){
                 if(msg.getString("value").equals("HLL")) redLight = true;
                 if(msg.getString("value").equals("LLH")) redLight = false;
+                Logger.info(this.id, "Recieved signal " + msg.getString("signal-type") + ": "+ msg.getString("value"));
             }
         }
     }
@@ -243,7 +248,7 @@ public class Vehicle extends Device {
         } catch (MqttException e) {
             Logger.error(this.id, "Error publishing VEHICLE_IN message: " + e.getMessage());
         }
-        Logger.debug(this.id, "Entered road segment " + roadSegment);
+        Logger.info(this.id, "Entered road segment " + roadSegment);
     }
 
     private void handleExit(IRoadPoint position) {
@@ -266,7 +271,7 @@ public class Vehicle extends Device {
         } catch (MqttException e) {
             Logger.error(this.id, "Error publishing VEHICLE_OUT message: " + e.getMessage());
         }
-        Logger.debug(this.id, "Exited road segment " + roadSegment);
+        Logger.info(this.id, "Exited road segment " + roadSegment);
     }
 
     private void updateAWS(){
@@ -283,9 +288,11 @@ public class Vehicle extends Device {
      * Updates the actual speed of the vehicle to the maximum of the speed limit and the cruise speed
      */
     void updateSpeed(){
+        int oldSpeed = this.actualSpeed;
         this.actualSpeed = Math.min(this.speedLimit, this.cruiseSpeed);
         if(redLight) this.actualSpeed = 0;
-        Logger.debug(this.id, "Speed updated to " + this.actualSpeed + " km/h");
+        if(oldSpeed != this.actualSpeed)
+            Logger.debug(this.id, "Speed updated to " + this.actualSpeed + " km/h");
     }
 
     public enum VehicleRole {

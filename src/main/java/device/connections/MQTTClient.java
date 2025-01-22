@@ -36,7 +36,7 @@ public class MQTTClient implements MqttCallback {
      */
     public void subscribe(String topic) throws MqttException {
         this.client.subscribe(topic);
-        Logger.info(clientId, "Subscribed to " + topic);
+        Logger.trace(clientId, "Subscribed to " + topic);
     }
 
     /**
@@ -45,7 +45,7 @@ public class MQTTClient implements MqttCallback {
      */
     public void unsubscribe(String topic) throws MqttException {
         this.client.unsubscribe(topic);
-        Logger.info(clientId, "Unsubscribed from " + topic);
+        Logger.trace(clientId, "Unsubscribed from " + topic);
     }
 
     /**
@@ -55,7 +55,7 @@ public class MQTTClient implements MqttCallback {
      */
     public void publish(String topic, JSONObject payload) throws MqttException {
         this.client.publish(topic, payload.toString().getBytes(), 0, false);
-        // Logger.debug(clientId, "Published message to " + topic);
+        Logger.trace(clientId, "Published message to " + topic);
     }
 
     protected void disconnect() throws MqttException {

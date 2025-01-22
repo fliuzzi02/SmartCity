@@ -145,7 +145,12 @@ public class InfoPanel extends Device{
                 accidentStatus = FunctionStatus.BLINK;
             } else if(event.equals("CLOSE")){
                 // Remove element with same string
-                accidentsIds.remove(accidentId);
+                for (String id : accidentsIds){
+                    if (id.equals(accidentId)){
+                        accidentsIds.remove(id);
+                        break;
+                    }
+                }
                 Logger.info(this.id, "Accident removed: " + accidentId);
                 if (accidentsIds.size() == 0)
                     accidentStatus = FunctionStatus.OFF;

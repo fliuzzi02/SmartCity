@@ -30,7 +30,7 @@ public class AWSClient {
         AWSTopicHandler topicHandler = new AWSTopicHandler(topic, clientId, myDevice);
         try {
             this.client.subscribe(topicHandler);
-            Logger.info(this.clientId, "Subscribed to: " + topic);
+            Logger.trace(this.clientId, "Subscribed to: " + topic);
         } catch (AWSIotException e) {
             Logger.error(this.clientId, "Error subscribing to topic: " + topic);
         }
@@ -50,7 +50,7 @@ public class AWSClient {
             AWSIotQos qos = AWSIotQos.QOS0;
             AWSIotMessage message = new AWSIotMessage(topic, qos, payload.toString());
             client.publish(message);
-            Logger.info(clientId, "Published: " + payload);
+            Logger.trace(clientId, "Published: " + payload);
         } catch (AWSIotException e) {
             Logger.error(clientId, "Error publishing message: " + e.getMessage());
         }
