@@ -76,6 +76,8 @@ public class InfoPanel extends Device{
                 this.certificateFile,
                 this.privateKeyFile);
 
+        this.awsConnection.subscribe("infopanel/"+this.id+"/command");
+
         // Get initial status of road segment
         JSONObject status = getRoadStatus(this.roadSegment);
         handleRoadStatus(status);
@@ -101,6 +103,14 @@ public class InfoPanel extends Device{
             update.put("f2", this.accidentStatus.name());
             update.put("f3", this.circulationStatus.name());
             this.awsConnection.publish("infopanel/"+this.id+"/status", update);
+        } else if (topic.endsWith("command")){
+            String f1 = payload.getString("f1");
+            String f2 = payload.getString("f2");
+            String f3 = payload.getString("f3");
+
+            this.trafficStatus = FunctionStatus.valueOf(f1);
+            this.accidentStatus = FunctionStatus.valueOf(f2);
+            this.circulationStatus = FunctionStatus.valueOf(f3);
         }
     }
 
