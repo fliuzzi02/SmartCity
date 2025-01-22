@@ -16,9 +16,55 @@ import java.util.Queue;
 // TODO: Change the certificates once the policies are updated
 public class Main {
     public static void main(String[] args) throws Exception{
-        congestionScenario(20, "R5s1", 0, 580);
-        // infoPanelTesting();
-        // accidentScenario();
+        if (args.length == 0) {
+            printUsage();
+            return;
+        }
+
+        switch (args[0]) {
+            case "--congestion":
+                if (args.length != 5) {
+                    printUsage();
+                    return;
+                }
+                int numberOfCars = Integer.parseInt(args[1]);
+                String roadSegment = args[2];
+                int startingPoint = Integer.parseInt(args[3]);
+                int endPoint = Integer.parseInt(args[4]);
+                congestionScenario(numberOfCars, roadSegment, startingPoint, endPoint);
+                break;
+            case "--infoPanelTesting":
+                infoPanelTesting();
+                break;
+            case "--accident":
+                accidentScenario();
+                break;
+            case "--createManagers":
+                managersCreator();
+                break;
+            case "--createInfoPanel":
+                if (args.length != 3) {
+                    printUsage();
+                    return;
+                }
+                String panelRoadSegment = args[1];
+                int position = Integer.parseInt(args[2]);
+                infoPanelCreator(panelRoadSegment, position);
+                break;
+            case "--createVehicle":
+                if (args.length != 5) {
+                    printUsage();
+                    return;
+                }
+                String vehicleId = args[1];
+                Vehicle.VehicleRole role = Vehicle.VehicleRole.valueOf(args[2]);
+                int speed = Integer.parseInt(args[3]);
+                String codedPath = args[4];
+                vehicleCreator(vehicleId, role, speed, codedPath);
+                break;
+            default:
+                printUsage();
+        }
     }
 
     /**
@@ -128,5 +174,72 @@ public class Main {
         Thread.sleep(20000);
         vehicle.exitRoad();
         vehicle.stop();
+    }
+
+    /**
+     * Create a road manager and an accident manager
+     * @throws Exception if the managers cannot be created
+     */
+    private static void managersCreator() throws Exception {
+        // Create road manager
+        RoadManager manager = new RoadManager("RM-1");
+        manager.init();
+        // Create accident manager
+        AccidentManager accidentManager = new AccidentManager("AM-1");
+        accidentManager.init();
+    }
+
+    /**
+     * Create an info panel placed at the given position
+     * @param roadSegment the name of the road segment the info panel is placed on
+     * @param position the position of the info panel
+     * @throws Exception if the info panel cannot be created
+     */
+    private static void infoPanelCreator(String roadSegment, int position) throws Exception {
+        // Create info panel
+        InfoPanel infoPanel = new InfoPanel("IP-"+roadSegment, roadSegment, position, GlobalVars.AWS_ENDPOINT, GlobalVars.GLOBAL_CERT, GlobalVars.GLOBAL_KEY);
+        infoPanel.init();
+    }
+
+    /**
+     * Create a vehicle with the given parameters
+     * @param vehicleId the plate of the vehicle
+     * @param role the role of the vehicle
+     * @param speed the speed of the vehicle
+     * @param codedPath the path the vehicle will take, it has to be coded in the following way: R5s1,0,580; or R5s1,0,580;R5s2,0,580;... etc
+     * @throws Exception if the vehicle cannot be created
+     */
+    private static void vehicleCreator(String vehicleId, Vehicle.VehicleRole role, int speed, String codedPath) throws Exception {
+        // The coded path is something like R5s1,0,580; or R5s1,0,580;R5s2,0,580;... etc
+        String[] pathFragments = codedPath.split(";");
+        Route route = new Route();
+        for (String fragment : pathFragments) {
+            String[] fragmentParts = fragment.split(",");
+            route.addRouteFragment(fragmentParts[0], Integer.parseInt(fragmentParts[1]), Integer.parseInt(fragmentParts[2]));
+        }
+        Vehicle vehicle = new Vehicle(vehicleId, role, speed, new RoadPoint(pathFragments[0].split(",")[0], 0), GlobalVars.AWS_ENDPOINT, GlobalVars.VE_CERTIFICATE, GlobalVars.VE_KEY);
+        vehicle.setRoute(route);
+        vehicle.startRoute();
+        vehicle.init();
+        while (!vehicle.reachedDestination()) {
+            Thread.sleep(1000);
+        }
+        vehicle.exitRoad();
+    }
+
+    private static void printUsage() {
+        System.out.println("Usage:");
+        System.out.println("\tTo run the various scenarios:");
+        System.out.println("\t\t--congestion <numberOfCars> <roadSegment> <startingPoint> <endPoint>");
+        System.out.println("\t\t--infoPanelTesting");
+        System.out.println("\t\t--accident");
+        System.out.println("\t To create various components:");
+        System.out.println("\t\t--createManagers");
+        System.out.println("\t\t--createInfoPanel <roadSegment> <position>");
+        System.out.println("\t\t--createVehicle <vehicleId> <role> <speed> <codedPath>");
+        System.out.println("\tNotes:");
+        System.out.println("\t\t- The codedPath for the vehicle has to be in the following format: R5s1,0,580; or R5s1,0,580;R5s2,0,580;... etc");
+        System.out.println("\t\t- The role of the vehicle has to be one of the following: PrivateUsage, Bus, Police, Taxi, Ambulance");
+        System.out.println("\t\t- There is no need to use apices to write the arguments, just write them separated by spaces in the correct order");
     }
 }
