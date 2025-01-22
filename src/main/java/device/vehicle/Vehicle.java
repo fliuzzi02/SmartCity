@@ -26,19 +26,27 @@ public class Vehicle extends Device {
     private String lastSegment = "";
     private int lastPosition = -1;
     private final Queue<Accident> accidentList = new LinkedList<>();
+    String clientEndpoint;
+    String certificateFile;
+    String privateKeyFile;
 
-    public Vehicle(String id, VehicleRole role, int initialSpeed, RoadPoint initialPosition) {
+    public Vehicle(String id, VehicleRole role, int initialSpeed, RoadPoint initialPosition, String clientEndpoint, String certificateFile, String privateKeyFile) {
         super(id);
         this.role = role;
         this.navigator = new Navigator(id+"-navigator");
         this.navigator.setCurrentPosition(initialPosition);
         this.cruiseSpeed = initialSpeed;
+        this.clientEndpoint = clientEndpoint;
+        this.certificateFile = certificateFile;
+        this.privateKeyFile = privateKeyFile;
     }
 
     @Override
     public void init() throws MqttException {
         this.mqttConnect(GlobalVars.BROKER_ADDRESS);
+        this.awsConnect(clientEndpoint, certificateFile, privateKeyFile);
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/step");
+        this.awsConnection.subscribe("vehicle/" + this.id + "/command");
         new Thread(this).start();
     }
 
@@ -87,6 +95,12 @@ public class Vehicle extends Device {
                 break;
             case "TRAFFIC_SIGNAL":
                 handleTrafficSignal(payload);
+                break;
+            case "COMMAND":
+                JSONObject msg = payload.getMsg();
+                if(msg.getString("command").equals("ACCIDENT")) notifyAccident();
+                if(msg.getString("command").equals("REMOVE_ACCIDENT")) removeAccident();
+                if(msg.getString("command").equals("SET_SPEED")) setSpeed(msg.getInt("value"));
                 break;
             default:
                 Logger.trace(this.id, "Unknown message type: " + payload.getType());
@@ -152,6 +166,7 @@ public class Vehicle extends Device {
     }
 
     private void handleSimulationStep(){
+        updateAWS();
         if(!this.navigator.isRouting() || (this.navigator.getDestinationPoint().equals(this.navigator.getCurrentPosition())))
             return;
 
@@ -233,6 +248,16 @@ public class Vehicle extends Device {
         Logger.debug(this.id, "Exited road segment " + roadSegment);
     }
 
+    private void updateAWS(){
+        JSONObject update = new JSONObject();
+        update.put("current-position", this.navigator.getCurrentPosition().toString());
+        update.put("destination", this.navigator.getDestinationPoint().toString());
+        update.put("actual-speed", this.actualSpeed);
+        update.put("cruise-speed", this.cruiseSpeed);
+
+        this.awsConnection.publish("vehicles/"+this.id+"/status", update);
+    }
+
     /**
      * Updates the actual speed of the vehicle to the maximum of the speed limit and the cruise speed
      */
@@ -253,24 +278,24 @@ public class Vehicle extends Device {
 
     public static void main(String []args){
 
-        RoadPoint initialPosition = new RoadPoint("R1s2", 0);
-        for(int i=0; i<5; i++) {
+        RoadPoint initialPosition = new RoadPoint("R1s1", 0);
+        for(int i=0; i<2; i++) {
             try {
                 // format int number to have 4 digits
                 String vehicleID = String.format("%04d", i)+ "AAA";
 
-                Vehicle vehicle = new Vehicle(vehicleID, VehicleRole.PrivateUsage, 10, initialPosition);
+                Vehicle vehicle = new Vehicle(vehicleID, VehicleRole.PrivateUsage, 10, initialPosition, GlobalVars.AWS_ENDPOINT, GlobalVars.VE_CERTIFICATE, GlobalVars.VE_KEY);
                 vehicle.init();
 
                 // Set route
                 Route route = new Route();
-                route.addRouteFragment("R1s2", 0, 29);
+                route.addRouteFragment("R1s1", 0, 29);
                 route.addRouteFragment("R1s2a", 29, 320);
                 route.addRouteFragment("R5s1", 0, 300);
                 vehicle.setRoute(route);
 
                 // Set speed
-                vehicle.setSpeed(80);
+                vehicle.setSpeed(10);
 
                 // Start route
                 vehicle.startRoute();

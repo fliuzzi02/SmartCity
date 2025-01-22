@@ -95,7 +95,7 @@ public class RoadManager extends Device {
     }
 
     private void createSpeedLimit(String roadSegment, int startKm, int endKm, int speedLimit) {
-        SpeedLimit sl = new SpeedLimit("SL-" + roadSegment, speedLimit, roadSegment, startKm, endKm);
+        SpeedLimit sl = new SpeedLimit("SL-" + roadSegment, speedLimit, roadSegment, startKm, endKm, GlobalVars.AWS_ENDPOINT, GlobalVars.SL_CERTIFICATE, GlobalVars.SL_KEY);
         speedLimits.add(sl);
         try {
             sl.init();

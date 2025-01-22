@@ -5,6 +5,7 @@ import main.java.device.RoadManager;
 import main.java.device.vehicle.Vehicle;
 import main.java.device.vehicle.navigation.components.RoadPoint;
 import main.java.device.vehicle.navigation.components.Route;
+import main.java.utils.GlobalVars;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -14,7 +15,7 @@ public class CongestionIncrementDecrement {
         // Create manager
         RoadManager manager = new RoadManager("RM-1");
         // Create info panel
-        InfoPanel infoPanel = new InfoPanel("IP-R5s1", "R5s1", 290);
+        InfoPanel infoPanel = new InfoPanel("IP-R5s1", "R5s1", 290, GlobalVars.AWS_ENDPOINT, GlobalVars.IP_CERTIFICATE, GlobalVars.IP_KEY);
 
         Queue<Vehicle> vehicles = new LinkedList<>();
 
@@ -28,7 +29,7 @@ public class CongestionIncrementDecrement {
             RoadPoint start = new RoadPoint("R5s1", 0);
             Route route = new Route();
             route.addRouteFragment("R5s1", 0, 580);
-            Vehicle vehicle = new Vehicle(vehicleId, Vehicle.VehicleRole.PrivateUsage, 100, start);
+            Vehicle vehicle = new Vehicle(vehicleId, Vehicle.VehicleRole.PrivateUsage, 100, start, GlobalVars.AWS_ENDPOINT, GlobalVars.VE_CERTIFICATE, GlobalVars.VE_KEY);
             vehicle.setRoute(route);
             vehicle.startRoute();
             vehicle.init();

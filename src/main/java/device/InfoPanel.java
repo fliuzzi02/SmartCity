@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import static java.lang.Math.abs;
-import static main.java.utils.GlobalVars.getRoadStatus;
+import static main.java.utils.GlobalVars.*;
 
 /**
  * This class represents an InfoPanel device
@@ -27,6 +27,9 @@ public class InfoPanel extends Device{
     FunctionStatus accidentStatus;
     ArrayList<String> accidentsIds = new ArrayList<>();
     FunctionStatus circulationStatus;
+    String clientEndpoint;
+    String certificateFile;
+    String privateKeyFile;
 
     /**
      * Constructor of the Information Panel
@@ -43,6 +46,24 @@ public class InfoPanel extends Device{
         this.position = position;
     }
 
+    /**
+     * Constructor of the Information Panel
+     * @param id id of the panel
+     * @param roadSegment name of the segment where the panel is located
+     * @param position position in meters at which the panel is located
+     */
+    public InfoPanel(String id, String roadSegment, int position, String clientEndpoint, String certificateFile, String privateKeyFile) {
+        super(id);
+        this.roadSegment = roadSegment;
+        this.trafficStatus = FunctionStatus.OFF;
+        this.accidentStatus = FunctionStatus.OFF;
+        this.circulationStatus = FunctionStatus.OFF;
+        this.position = position;
+        this.clientEndpoint = clientEndpoint;
+        this.certificateFile = certificateFile;
+        this.privateKeyFile = privateKeyFile;
+    }
+
     @Override
     public void init() throws MqttException {
         this.mqttConnect(GlobalVars.BROKER_ADDRESS);
@@ -51,9 +72,9 @@ public class InfoPanel extends Device{
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + this.roadSegment + "/traffic");
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/step");
 
-        this.awsConnect("ampdveamdmijg-ats.iot.us-east-1.amazonaws.com",
-                "certs/99e3f3c36622033e6f14e23903f7bc75ed1770dcaf8f94f838a271f6beb94b5f-certificate.pem.crt",
-                "certs/99e3f3c36622033e6f14e23903f7bc75ed1770dcaf8f94f838a271f6beb94b5f-private.pem.key");
+        this.awsConnect(this.clientEndpoint,
+                this.certificateFile,
+                this.privateKeyFile);
 
         // Get initial status of road segment
         JSONObject status = getRoadStatus(this.roadSegment);
@@ -79,7 +100,7 @@ public class InfoPanel extends Device{
             update.put("f1", this.trafficStatus.name());
             update.put("f2", this.accidentStatus.name());
             update.put("f3", this.circulationStatus.name());
-            this.awsConnection.publish("status", update);
+            this.awsConnection.publish("infopanel/"+this.id+"/status", update);
         }
     }
 
@@ -162,7 +183,7 @@ public class InfoPanel extends Device{
     }
 
     public static void main(String[] args) {
-        InfoPanel panel = new InfoPanel(args[0], args[1], Integer.parseInt(args[2]));
+        InfoPanel panel = new InfoPanel(args[0], args[1], Integer.parseInt(args[2]), AWS_ENDPOINT, GLOBAL_CERT, GLOBAL_KEY);
         try {
             panel.init();
         } catch (MqttException e) {

@@ -13,16 +13,10 @@ public class AWSClient {
     private AWSIotMqttClient client;
     protected Device myDevice;
     private String clientId;
-    private String clientEndpoint;
-    private String certificateFile;
-    private String privateKeyFile;
 
     public AWSClient(Device myDevice, String clientEndpoint, String certificateFile, String privateKeyFile) {
         this.myDevice = myDevice;
         this.clientId = myDevice.getId() + "-AWS";
-        this.clientEndpoint = clientEndpoint;
-        this.certificateFile = certificateFile;
-        this.privateKeyFile = privateKeyFile;
         KeyStorePasswordPair pair = SampleUtil.getKeyStorePasswordPair(certificateFile, privateKeyFile);
         this.client = new AWSIotMqttClient(clientEndpoint, this.clientId, pair.keyStore, pair.keyPassword);
         try {
@@ -45,7 +39,7 @@ public class AWSClient {
     public void unsubscribe(String topic) {
         try {
             this.client.unsubscribe(topic);
-            Logger.info(this.clientId, "Unsubscribed from: " + topic);
+            Logger.trace(this.clientId, "Unsubscribed from: " + topic);
         } catch (AWSIotException e) {
             Logger.error(this.clientId, "Error unsubscribing from topic: " + topic);
         }
