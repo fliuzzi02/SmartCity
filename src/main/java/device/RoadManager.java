@@ -43,7 +43,7 @@ public class RoadManager extends Device {
 
     private void handleStatus(Message message) {
         if(!message.getType().equals("ROAD_STATUS")) {
-            Logger.warn(this.id, "Received a message of type " + message.getType() + " on a status topic");
+            Logger.warn(this.id, "Received a message of type " + message.getType() + " on a /info topic");
             return;
         }
 

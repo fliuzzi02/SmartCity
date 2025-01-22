@@ -6,12 +6,12 @@ import main.java.device.vehicle.navigation.components.RoadPoint;
 import main.java.device.vehicle.navigation.components.Route;
 import main.java.device.vehicle.navigation.interfaces.IRoadPoint;
 import main.java.device.vehicle.navigation.interfaces.IRoute;
-import main.java.utils.*;
+import main.java.utils.GlobalVars;
+import main.java.utils.Logger;
+import main.java.utils.MQTTMessage;
+import main.java.utils.Message;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONObject;
-
-import java.util.LinkedList;
-import java.util.Queue;
 
 import static main.java.utils.GlobalVars.STEP_MS;
 import static main.java.utils.GlobalVars.getRoadStatus;
@@ -25,7 +25,6 @@ public class Vehicle extends Device {
     private boolean redLight = false;
     private String lastSegment = "";
     private int lastPosition = -1;
-    private final Queue<Accident> accidentList = new LinkedList<>();
     String clientEndpoint;
     String certificateFile;
     String privateKeyFile;
@@ -53,13 +52,11 @@ public class Vehicle extends Device {
     /**
      * This method notifies that an accident has occurred at the position of the vehicle
      */
-    public void notifyAccident(){
+    public void initiateAccident(){
         // create UUID for accident
         String accidentID = java.util.UUID.randomUUID().toString();
         String segment = navigator.getCurrentPosition().getRoadSegment();
         int position = navigator.getCurrentPosition().getPosition();
-        Accident accident = new Accident(accidentID, segment, position);
-        accidentList.add(accident);
 
         Message message = Message.createAccident(accidentID, "OPEN", this.id, segment, position);
         try {
@@ -72,22 +69,7 @@ public class Vehicle extends Device {
         // This vehicle was in an accident, so it should stop
         setSpeed(0);
         updateSpeed();
-    }
-
-    /**
-     * This method removes the oldest accident from the list and notifies that the accident has been resolved
-     */
-    public void removeAccident(){
-        Accident oldestAccident = accidentList.poll();
-        if(oldestAccident != null){
-            Message message = Message.createAccident(oldestAccident.getId(), "CLOSED", this.id, oldestAccident.getSegment(), oldestAccident.getPosition());
-            try {
-                this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + oldestAccident.getSegment() + "/alerts", message.toJson());
-                this.awsConnection.publish("vehicles/"+this.id+"/alerts", message.toJson());
-            } catch (MqttException e) {
-                Logger.error(this.id, "Error publishing ACCIDENT message: " + e.getMessage());
-            }
-        }
+        Logger.info(this.id, "Accident initiated at " + segment + " position " + position);
     }
 
     @Override
@@ -104,8 +86,7 @@ public class Vehicle extends Device {
                 break;
             case "COMMAND":
                 JSONObject msg = payload.getMsg();
-                if(msg.getString("command").equals("ACCIDENT")) notifyAccident();
-                if(msg.getString("command").equals("REMOVE_ACCIDENT")) removeAccident();
+                if(msg.getString("command").equals("ACCIDENT")) initiateAccident();
                 if(msg.getString("command").equals("SET_SPEED")) setSpeed(msg.getInt("value"));
                 break;
             case "ACCIDENT":
@@ -120,8 +101,8 @@ public class Vehicle extends Device {
     private void handleAccident(Message payload) {
         JSONObject msg = payload.getMsg();
         String accidentID = msg.getString("id");
-        String status = msg.getString("status");
-        String segment = msg.getString("segment");
+        String status = msg.getString("event");
+        String segment = msg.getString("road-segment");
         int position = msg.getInt("position");
 
         if(status.equals("OPEN")){
@@ -139,6 +120,11 @@ public class Vehicle extends Device {
         this.cruiseSpeed = speed;
     }
 
+    /**
+     * This method sets the route of the vehicle
+     * @param route the route to be set
+     * @throws RoutingException if the vehicle is already routing
+     */
     public void setRoute(IRoute route) throws RoutingException{
         if(this.navigator.isRouting()) {
             throw new RoutingException("Vehicle is already routing, cannot set a new route");
@@ -147,6 +133,10 @@ public class Vehicle extends Device {
         Logger.info(this.id, "Route set: " + route);
     }
 
+    /**
+     * This method starts the routing of the vehicle
+     * @throws RoutingException if the vehicle has no route set
+     */
     public void startRoute() throws RoutingException{
         if(this.navigator.getRoute() == null){
             throw new RoutingException("No route set");
@@ -154,10 +144,17 @@ public class Vehicle extends Device {
         this.navigator.startRouting();
     }
 
+    /**
+     * This method checks if the vehicle has reached its destination
+     * @return true if the vehicle has reached its destination, false otherwise
+     */
     public boolean reachedDestination(){
         return this.navigator.getDestinationPoint().equals(this.navigator.getCurrentPosition());
     }
 
+    /**
+     * This method stops the routing and instructs the vehicle to exit the road
+     */
     public void exitRoad() {
         IRoadPoint position = this.navigator.getCurrentPosition();
         this.navigator.stopRouting();
@@ -293,6 +290,14 @@ public class Vehicle extends Device {
         if(redLight) this.actualSpeed = 0;
         if(oldSpeed != this.actualSpeed)
             Logger.debug(this.id, "Speed updated to " + this.actualSpeed + " km/h");
+    }
+
+    /**
+     * This method returns the current position of the vehicle
+     * @return the current position of the vehicle
+     */
+    public IRoadPoint getCurrentPosition(){
+        return this.navigator.getCurrentPosition();
     }
 
     public enum VehicleRole {

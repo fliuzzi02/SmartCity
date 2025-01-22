@@ -66,7 +66,7 @@ public abstract class Device implements Runnable{
     protected abstract void handleMessage(MQTTMessage message);
 
     /**
-     * Stops the current process
+     * Stops the device process
      */
     public void stop() {
         this.running = false;

@@ -67,7 +67,7 @@ public class Message {
         msg.put("simulator", "PTPaterna");
         msg.put("step", counter);
 
-        return new Message("STEP", msg);
+        return new Message("SIMULATOR_STEP", msg);
     }
 
     /**

@@ -35,7 +35,7 @@ public class Logger {
 	 * @param msg - the message to be logged
 	 */
 	public static void warn(String sender, String msg) {
-		System.out.println(putCurrentTimestamp() + " \u001B[33mWARN [" + formatWithSpaces(sender,sender_spacing) + "] " + msg + "\u001B[0m");
+		System.out.println(putCurrentTimestamp() + " \u001B[33mWARN  [" + formatWithSpaces(sender,sender_spacing) + "] " + msg + "\u001B[0m");
 	}
 
 	/**
