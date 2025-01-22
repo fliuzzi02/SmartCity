@@ -102,9 +102,26 @@ public class Vehicle extends Device {
                 if(msg.getString("command").equals("REMOVE_ACCIDENT")) removeAccident();
                 if(msg.getString("command").equals("SET_SPEED")) setSpeed(msg.getInt("value"));
                 break;
+            case "ACCIDENT":
+                handleAccident(payload);
+                break;
             default:
                 Logger.trace(this.id, "Unknown message type: " + payload.getType());
                 break;
+        }
+    }
+
+    private void handleAccident(Message payload) {
+        JSONObject msg = payload.getMsg();
+        String accidentID = msg.getString("accident-id");
+        String status = msg.getString("status");
+        String segment = msg.getString("segment");
+        int position = msg.getInt("position");
+
+        if(status.equals("OPEN")){
+            Logger.info(this.id, "Received accident alert: " + accidentID + " at " + segment + " position " + position);
+        } else if(status.equals("CLOSED")){
+            Logger.info(this.id, "Received accident resolved: " + accidentID + " at " + segment + " position " + position);
         }
     }
 
@@ -208,7 +225,7 @@ public class Vehicle extends Device {
         // Subscribe to new segment
         try {
             this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/signals");
-            this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/alerts");
+            this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/info");
         } catch (MqttException e) {
             throw new RuntimeException(e);
         }
@@ -230,7 +247,7 @@ public class Vehicle extends Device {
         // Unsubscribe from previous segment
         try {
             this.connection.unsubscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/signals");
-            this.connection.unsubscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/alerts");
+            this.connection.unsubscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/info");
         } catch (MqttException e) {
             throw new RuntimeException(e);
         }
