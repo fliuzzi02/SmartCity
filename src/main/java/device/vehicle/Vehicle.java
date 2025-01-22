@@ -228,6 +228,7 @@ public class Vehicle extends Device {
         try {
             this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/signals");
             this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/info");
+            this.awsConnection.subscribe("road/" + position.getRoadSegment() + "/info");
         } catch (MqttException e) {
             throw new RuntimeException(e);
         }
@@ -250,6 +251,7 @@ public class Vehicle extends Device {
         try {
             this.connection.unsubscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/signals");
             this.connection.unsubscribe(GlobalVars.BASE_TOPIC + "/road/" + position.getRoadSegment() + "/info");
+            this.awsConnection.unsubscribe("road/" + position.getRoadSegment() + "/info");
         } catch (MqttException e) {
             throw new RuntimeException(e);
         }
