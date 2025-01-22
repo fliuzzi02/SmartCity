@@ -31,20 +31,6 @@ public class InfoPanel extends Device{
     String certificateFile;
     String privateKeyFile;
 
-    /**
-     * Constructor of the Information Panel
-     * @param id id of the panel
-     * @param roadSegment name of the segment where the panel is located
-     * @param position position in meters at which the panel is located
-     */
-    public InfoPanel(String id, String roadSegment, int position) {
-        super(id);
-        this.roadSegment = roadSegment;
-        this.trafficStatus = FunctionStatus.OFF;
-        this.accidentStatus = FunctionStatus.OFF;
-        this.circulationStatus = FunctionStatus.OFF;
-        this.position = position;
-    }
 
     /**
      * Constructor of the Information Panel
