@@ -38,12 +38,14 @@ public class RoadManager extends Device {
     protected void handleMessage(MQTTMessage message) {
         String topic = message.getTopic();
         Message payload = message.getPayload();
+        // Get road id from second last topic channel
+        String roadId = topic.split("/")[topic.split("/").length - 2];
 
         if(topic.endsWith("alerts")) {
             // Retransmit the alert to the info topic
             try {
                 this.connection.publish(topic.replace("alerts", "info"), payload.toJson());
-                this.awsConnection.publish(topic.replace("alerts", "info"), payload.toJson());
+                this.awsConnection.publish("road/" + roadId + "/info", payload.toJson());
             } catch (MqttException e) {
                 Logger.error(this.id, "An error occurred: " + e.getMessage());
             }
