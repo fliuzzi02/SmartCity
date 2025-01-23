@@ -1,12 +1,13 @@
 package main.java.device.connections;
 
-import com.amazonaws.services.iot.client.*;
+import com.amazonaws.services.iot.client.AWSIotException;
+import com.amazonaws.services.iot.client.AWSIotMessage;
+import com.amazonaws.services.iot.client.AWSIotMqttClient;
+import com.amazonaws.services.iot.client.AWSIotQos;
 import com.amazonaws.services.iot.client.sample.sampleUtil.SampleUtil;
 import com.amazonaws.services.iot.client.sample.sampleUtil.SampleUtil.KeyStorePasswordPair;
 import main.java.device.Device;
 import main.java.utils.Logger;
-import main.java.utils.MQTTMessage;
-import main.java.utils.Message;
 import org.json.JSONObject;
 
 public class AWSClient {
@@ -21,6 +22,7 @@ public class AWSClient {
         this.client = new AWSIotMqttClient(clientEndpoint, this.clientId, pair.keyStore, pair.keyPassword);
         try {
             this.client.connect();
+            Logger.debug(this.clientId, "Connected to AWS IoT");
         } catch (AWSIotException e) {
             Logger.error(this.clientId, "Error connecting to AWS: " + e.getMessage());
         }
@@ -30,7 +32,7 @@ public class AWSClient {
         AWSTopicHandler topicHandler = new AWSTopicHandler(topic, clientId, myDevice);
         try {
             this.client.subscribe(topicHandler);
-            Logger.trace(this.clientId, "Subscribed to: " + topic);
+            Logger.debug(this.clientId, "Subscribed to: " + topic);
         } catch (AWSIotException e) {
             Logger.error(this.clientId, "Error subscribing to topic: " + topic);
         }
@@ -53,23 +55,6 @@ public class AWSClient {
             Logger.trace(clientId, "Published: " + payload);
         } catch (AWSIotException e) {
             Logger.error(clientId, "Error publishing message: " + e.getMessage());
-        }
-    }
-
-    private class AWSTopicHandler extends AWSIotTopic{
-        private String clientId;
-        private Device myDevice;
-        public AWSTopicHandler(String topic, String clientId, Device myDevice) {
-            super(topic);
-            this.clientId = clientId;
-            this.myDevice = myDevice;
-        }
-
-        @Override
-        public void onMessage(AWSIotMessage message) {
-            Message payload = new Message(new JSONObject(message.getStringPayload()));
-            Logger.debug(clientId, "RECEIVED: " + payload);
-            myDevice.onMessage(new MQTTMessage(message.getTopic(), payload));
         }
     }
 }

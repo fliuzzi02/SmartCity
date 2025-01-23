@@ -8,11 +8,18 @@ import org.json.JSONObject;
 import java.util.LinkedList;
 import java.util.List;
 
+// TODO: Add AWS IoT Functionality
 public class AccidentManager extends Device {
+    private final String awsEndpoint;
+    private final String certificateFile;
+    private final String privateKeyFile;
     private final List<Accident> accidents = new LinkedList<>();
 
-    public AccidentManager(String id) {
+    public AccidentManager(String id, String awsEndpoint, String certificateFile, String privateKeyFile) {
         super(id);
+        this.awsEndpoint = awsEndpoint;
+        this.certificateFile = certificateFile;
+        this.privateKeyFile = privateKeyFile;
     }
 
     @Override
@@ -20,6 +27,9 @@ public class AccidentManager extends Device {
         this.mqttConnect(GlobalVars.BROKER_ADDRESS);
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/step");
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/+/alerts");
+
+        this.awsConnect(awsEndpoint, certificateFile, privateKeyFile);
+        this.awsConnection.subscribe("road/+/alerts");
 
         new Thread(this).start();
     }

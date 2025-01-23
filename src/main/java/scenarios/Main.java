@@ -13,7 +13,6 @@ import main.java.utils.Logger;
 import java.util.LinkedList;
 import java.util.Queue;
 
-// TODO: Change the certificates once the policies are updated
 public class Main {
     public static void main(String[] args) throws Exception{
         if (args.length == 0) {
@@ -75,12 +74,8 @@ public class Main {
      */
     private static void congestionScenario(int numberOfCars, String roadSegment, int startingPoint, int endPoint) throws Exception {
         Logger.warn("Main", "Starting congestion scenario with " + numberOfCars + " vehicles");
-        // Create manager
-        RoadManager manager = new RoadManager("RM-1");
-        manager.init();
-        // Create accident manager
-        AccidentManager accidentManager = new AccidentManager("AM-1");
-        accidentManager.init();
+        // Create managers
+        managersCreator();
         // Create info panel
         InfoPanel infoPanel = new InfoPanel("IP-"+roadSegment, roadSegment, (endPoint+startingPoint)/2, GlobalVars.AWS_ENDPOINT, GlobalVars.IP_CERTIFICATE, GlobalVars.IP_KEY);
         infoPanel.init();
@@ -119,12 +114,8 @@ public class Main {
      * @throws Exception
      */
     private static void infoPanelTesting() throws Exception {
-        // Create road manager
-        RoadManager manager = new RoadManager("RM-1");
-        manager.init();
-        // Create accident manager
-        AccidentManager accidentManager = new AccidentManager("AM-1");
-        accidentManager.init();
+        // Create managers
+        managersCreator();
         // Create info panel
         InfoPanel infoPanel = new InfoPanel("IP-R5s1", "R5s1", 290, GlobalVars.AWS_ENDPOINT, GlobalVars.IP_CERTIFICATE, GlobalVars.IP_KEY);
         infoPanel.init();
@@ -143,6 +134,7 @@ public class Main {
         }
         ambulance.exitRoad();
         ambulance.stop();
+        Logger.warn("Main", "Ambulance has exited the road, scenario finished");
     }
 
     /**
@@ -150,12 +142,8 @@ public class Main {
      * @throws Exception
      */
     private static void accidentScenario() throws Exception {
-        // Create road manager
-        RoadManager manager = new RoadManager("RM-1");
-        manager.init();
-        // Create accident manager
-        AccidentManager accidentManager = new AccidentManager("AM-1");
-        accidentManager.init();
+        // Create managers
+        managersCreator();
         // Create info panel
         InfoPanel infoPanel = new InfoPanel("IP-R5s1", "R5s1", 290, GlobalVars.AWS_ENDPOINT, GlobalVars.IP_CERTIFICATE, GlobalVars.IP_KEY);
         infoPanel.init();
@@ -182,10 +170,10 @@ public class Main {
      */
     private static void managersCreator() throws Exception {
         // Create road manager
-        RoadManager manager = new RoadManager("RM-1");
+        RoadManager manager = new RoadManager("RM-1", GlobalVars.AWS_ENDPOINT, GlobalVars.MA_CERTIFICATE, GlobalVars.MA_KEY);
         manager.init();
         // Create accident manager
-        AccidentManager accidentManager = new AccidentManager("AM-1");
+        AccidentManager accidentManager = new AccidentManager("AM-1", GlobalVars.AWS_ENDPOINT, GlobalVars.MA_CERTIFICATE, GlobalVars.MA_KEY);
         accidentManager.init();
     }
 
@@ -197,7 +185,7 @@ public class Main {
      */
     private static void infoPanelCreator(String roadSegment, int position) throws Exception {
         // Create info panel
-        InfoPanel infoPanel = new InfoPanel("IP-"+roadSegment, roadSegment, position, GlobalVars.AWS_ENDPOINT, GlobalVars.GLOBAL_CERT, GlobalVars.GLOBAL_KEY);
+        InfoPanel infoPanel = new InfoPanel("IP-"+roadSegment, roadSegment, position, GlobalVars.AWS_ENDPOINT, GlobalVars.IP_CERTIFICATE, GlobalVars.IP_KEY);
         infoPanel.init();
     }
 

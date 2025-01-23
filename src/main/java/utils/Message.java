@@ -52,7 +52,6 @@ public class Message {
         return this.type;
     }
 
-    // TODO: At this point we should have one class for each type of message
     public JSONObject getMsg(){
         return this.msg;
     }

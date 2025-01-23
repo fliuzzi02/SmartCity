@@ -9,11 +9,18 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+// TODO: Add AWS IoT Functionality
 public class RoadManager extends Device {
+    private final String clientEndpoint;
+    private final String certificateFile;
+    private final String privateKeyFile;
     ArrayList<SpeedLimit> speedLimits = new ArrayList<>();
 
-    public RoadManager(String id) {
+    public RoadManager(String id, String clientEndpoint, String certificateFile, String privateKeyFile) {
         super(id);
+        this.clientEndpoint = clientEndpoint;
+        this.certificateFile = certificateFile;
+        this.privateKeyFile = privateKeyFile;
     }
 
     @Override
@@ -21,6 +28,9 @@ public class RoadManager extends Device {
         this.mqttConnect(GlobalVars.BROKER_ADDRESS);
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/+/alerts");
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/road/+/info");
+
+        this.awsConnect(this.clientEndpoint, this.certificateFile, this.privateKeyFile);
+        this.awsConnection.subscribe("road/+/alerts");
         new Thread(this).start();
     }
 
@@ -33,6 +43,7 @@ public class RoadManager extends Device {
             // Retransmit the alert to the info topic
             try {
                 this.connection.publish(topic.replace("alerts", "info"), payload.toJson());
+                this.awsConnection.publish(topic.replace("alerts", "info"), payload.toJson());
             } catch (MqttException e) {
                 Logger.error(this.id, "An error occurred: " + e.getMessage());
             }
@@ -116,7 +127,7 @@ public class RoadManager extends Device {
     }
 
     public static void main(String []args) {
-        RoadManager manager = new RoadManager("RM-1");
+        RoadManager manager = new RoadManager("RM-1", GlobalVars.AWS_ENDPOINT, GlobalVars.MA_CERTIFICATE, GlobalVars.MA_KEY);
         try {
             manager.init();
         } catch (MqttException e) {

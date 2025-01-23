@@ -23,6 +23,8 @@ public class GlobalVars {
     public static final String SL_KEY = "certs/speedLimit/9a92d1b63ddc4df2ee97df2fdd5898e92810ca23022cffd71f592dedf70646d3-private.pem.key";
     public static final String VE_CERTIFICATE = "certs/vehiculo/adf5bfbf77e2b471bfcc6256f35de6d0f02cda66fcbd5805606d46a340eab408-certificate.pem.crt";
     public static final String VE_KEY = "certs/vehiculo/adf5bfbf77e2b471bfcc6256f35de6d0f02cda66fcbd5805606d46a340eab408-private.pem.key";
+    public static final String MA_CERTIFICATE = "certs/manager/8f5d687755b88a9ebcb8df8cf3a3dc6b54adde0e952163654e728e4d641c5068-certificate.pem.crt";
+    public static final String MA_KEY = "certs/manager/8f5d687755b88a9ebcb8df8cf3a3dc6b54adde0e952163654e728e4d641c5068-private.pem.key";
 
     public static JSONObject getRoadStatus(String roadSegment){
         JSONObject result = new JSONObject();

@@ -7,8 +7,7 @@ import java.util.Calendar;
  * Logger class for logging messages with different levels of severity.
  */
 public class Logger {
-	// TODO: Add color to messages
-	
+	// TODO: Add dynamic coloring to the messages
 	public static final int sender_spacing = 17;
 	
 	/**
@@ -68,5 +67,26 @@ public class Logger {
 	
 	protected static String putCurrentTimestamp() {
 		return new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime());
+	}
+
+	public enum Color {
+		RED("\u001B[31m"),
+		GREEN("\u001B[32m"),
+		YELLOW("\u001B[33m"),
+		BLUE("\u001B[34m"),
+		PURPLE("\u001B[35m"),
+		CYAN("\u001B[36m"),
+		WHITE("\u001B[37m"),
+		RESET("\u001B[0m");
+
+		private final String code;
+
+		Color(String code) {
+			this.code = code;
+		}
+
+		public String getCode() {
+			return code;
+		}
 	}
 }

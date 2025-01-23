@@ -3,6 +3,7 @@ package main.java.device;
 import main.java.utils.GlobalVars;
 import main.java.utils.Logger;
 import main.java.utils.MQTTMessage;
+import main.java.utils.Message;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.json.JSONObject;
 
@@ -20,7 +21,6 @@ import static main.java.utils.GlobalVars.*;
  * Subscribes to topic .../road/<roadSegment>/traffic
  */
 public class InfoPanel extends Device{
-    // TODO: Add AWS IoT Device Shadow functionality
     final String roadSegment;
     final int position;
     FunctionStatus trafficStatus;
@@ -74,15 +74,15 @@ public class InfoPanel extends Device{
     @Override
     protected void handleMessage(MQTTMessage message){
         String topic = message.getTopic();
-        JSONObject payload = message.getPayload().toJson();
-        Logger.trace(this.id, "Received message from " + topic + ": " + payload.toString());
+        Message payload = message.getPayload();
+        Logger.trace(this.id, "Received message from " + topic + ": " + payload.toJson().toString());
 
         if (topic.endsWith("info")){
-            updateTrafficCongestion(payload);
+            updateTrafficCongestion(payload.toJson());
         } else if (topic.endsWith("alerts")){
-            updateAccident(payload);
+            updateAccident(payload.toJson());
         } else if (topic.endsWith("traffic")){
-            updateCirculation(payload);
+            updateCirculation(payload.toJson());
         } else if (topic.endsWith("step")){
             JSONObject update = new JSONObject();
             update.put("f1", this.trafficStatus.name());
@@ -90,13 +90,15 @@ public class InfoPanel extends Device{
             update.put("f3", this.circulationStatus.name());
             this.awsConnection.publish("infopanel/"+this.id+"/status", update);
         } else if (topic.endsWith("command")){
-            String f1 = payload.getString("f1");
-            String f2 = payload.getString("f2");
-            String f3 = payload.getString("f3");
+            JSONObject command = payload.getMsg();
+            String f1 = command.getString("f1");
+            String f2 = command.getString("f2");
+            String f3 = command.getString("f3");
 
             this.trafficStatus = FunctionStatus.valueOf(f1);
             this.accidentStatus = FunctionStatus.valueOf(f2);
             this.circulationStatus = FunctionStatus.valueOf(f3);
+            Logger.info(this.id, "New status: f1=" + this.trafficStatus + " f2=" + this.accidentStatus + " f3=" + this.circulationStatus);
         }
     }
 
