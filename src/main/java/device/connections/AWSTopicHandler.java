@@ -22,7 +22,7 @@ public class AWSTopicHandler extends AWSIotTopic {
     @Override
     public void onMessage(AWSIotMessage message) {
         JSONObject payload = new JSONObject(message.getStringPayload());
-        Message myMessage = new Message("COMMAND", payload);
+        Message myMessage = new Message(payload);
         MQTTMessage mqttMessage = new MQTTMessage(message.getTopic(), myMessage);
         // Logger.debug(clientId, "Message received on topic: " + mqttMessage.getTopic() + " with payload: " + mqttMessage.getPayload().getMsg().toString());
         myDevice.onMessage(mqttMessage);

@@ -76,7 +76,7 @@ public class Vehicle extends Device {
     protected void handleMessage(MQTTMessage message) {
         String topic = message.getTopic();
         Message payload = message.getPayload();
-        Logger.trace(this.id, "Received message from " + topic + ": " + payload.toString());
+        Logger.trace(this.id, "Received message from " + topic + ": " + payload.getMsg().toString());
         switch (payload.getType()) {
             case "SIMULATOR_STEP":
                 handleSimulationStep();
