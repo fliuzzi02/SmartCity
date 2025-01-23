@@ -82,7 +82,7 @@ public class Main {
         AccidentManager accidentManager = new AccidentManager("AM-1");
         accidentManager.init();
         // Create info panel
-        InfoPanel infoPanel = new InfoPanel("IP-"+roadSegment, roadSegment, (endPoint+startingPoint)/2, GlobalVars.AWS_ENDPOINT, GlobalVars.GLOBAL_CERT, GlobalVars.GLOBAL_KEY);
+        InfoPanel infoPanel = new InfoPanel("IP-"+roadSegment, roadSegment, (endPoint+startingPoint)/2, GlobalVars.AWS_ENDPOINT, GlobalVars.IP_CERTIFICATE, GlobalVars.IP_KEY);
         infoPanel.init();
 
         Queue<Vehicle> vehicles = new LinkedList<>();
@@ -126,7 +126,7 @@ public class Main {
         AccidentManager accidentManager = new AccidentManager("AM-1");
         accidentManager.init();
         // Create info panel
-        InfoPanel infoPanel = new InfoPanel("IP-R5s1", "R5s1", 290, GlobalVars.AWS_ENDPOINT, GlobalVars.GLOBAL_CERT, GlobalVars.GLOBAL_KEY);
+        InfoPanel infoPanel = new InfoPanel("IP-R5s1", "R5s1", 290, GlobalVars.AWS_ENDPOINT, GlobalVars.IP_CERTIFICATE, GlobalVars.IP_KEY);
         infoPanel.init();
 
         // Test f3 function by sending Ambulance
@@ -157,7 +157,7 @@ public class Main {
         AccidentManager accidentManager = new AccidentManager("AM-1");
         accidentManager.init();
         // Create info panel
-        InfoPanel infoPanel = new InfoPanel("IP-R5s1", "R5s1", 290, GlobalVars.AWS_ENDPOINT, GlobalVars.GLOBAL_CERT, GlobalVars.GLOBAL_KEY);
+        InfoPanel infoPanel = new InfoPanel("IP-R5s1", "R5s1", 290, GlobalVars.AWS_ENDPOINT, GlobalVars.IP_CERTIFICATE, GlobalVars.IP_KEY);
         infoPanel.init();
 
         // Test f2 function by simulating accident
