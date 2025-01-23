@@ -22,7 +22,6 @@ public class AWSClient {
         this.client = new AWSIotMqttClient(clientEndpoint, this.clientId, pair.keyStore, pair.keyPassword);
         try {
             this.client.connect();
-            Logger.debug(this.clientId, "Connected to AWS IoT");
         } catch (AWSIotException e) {
             Logger.error(this.clientId, "Error connecting to AWS: " + e.getMessage());
         }
@@ -32,7 +31,6 @@ public class AWSClient {
         AWSTopicHandler topicHandler = new AWSTopicHandler(topic, clientId, myDevice);
         try {
             this.client.subscribe(topicHandler);
-            Logger.debug(this.clientId, "Subscribed to: " + topic);
         } catch (AWSIotException e) {
             Logger.error(this.clientId, "Error subscribing to topic: " + topic);
         }

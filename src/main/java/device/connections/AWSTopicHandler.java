@@ -4,7 +4,6 @@ import com.amazonaws.services.iot.client.AWSIotMessage;
 import com.amazonaws.services.iot.client.AWSIotQos;
 import com.amazonaws.services.iot.client.AWSIotTopic;
 import main.java.device.Device;
-import main.java.utils.Logger;
 import main.java.utils.MQTTMessage;
 import main.java.utils.Message;
 import org.json.JSONObject;
@@ -16,7 +15,6 @@ public class AWSTopicHandler extends AWSIotTopic {
         super(topic, AWSIotQos.QOS0);
         this.clientId = clientId;
         this.myDevice = myDevice;
-        Logger.debug(clientId, "Created topicHandler");
     }
 
     @Override
