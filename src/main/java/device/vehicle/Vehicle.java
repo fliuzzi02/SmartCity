@@ -45,7 +45,7 @@ public class Vehicle extends Device {
         this.mqttConnect(GlobalVars.BROKER_ADDRESS);
         this.awsConnect(clientEndpoint, certificateFile, privateKeyFile);
         this.connection.subscribe(GlobalVars.BASE_TOPIC + "/step");
-        this.awsConnection.subscribe("vehicle/" + this.id + "/command");
+        this.awsConnection.subscribe("vehicles/" + this.id + "/command");
         new Thread(this).start();
     }
 
@@ -61,7 +61,7 @@ public class Vehicle extends Device {
         Message message = Message.createAccident(accidentID, "OPEN", this.id, segment, position);
         try {
             this.connection.publish(GlobalVars.BASE_TOPIC + "/road/" + segment + "/alerts", message.toJson());
-            this.awsConnection.publish("vehicles/"+this.id+"/alerts", message.toJson());
+            this.awsConnection.publish("road/" + segment + "/alerts", message.toJson());
         } catch (MqttException e) {
             Logger.error(this.id, "Error publishing ACCIDENT message: " + e.getMessage());
         }
