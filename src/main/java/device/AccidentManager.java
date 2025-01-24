@@ -38,6 +38,10 @@ public class AccidentManager extends Device {
     @Override
     protected void handleMessage(MQTTMessage message) {
         Message payload = message.getPayload();
+        // Ignore messages from AWS IoT
+        if(!message.getTopic().startsWith("es")) {
+            return;
+        }
         if(payload.getType().equals("ACCIDENT")) {
             JSONObject msg = payload.getMsg();
             if(msg.getString("event").equals("OPEN")) {

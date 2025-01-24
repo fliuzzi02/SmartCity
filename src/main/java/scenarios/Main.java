@@ -156,7 +156,7 @@ public class Main {
         vehicle.setRoute(route2);
         vehicle.startRoute();
         vehicle.init();
-        while(290 - (vehicle.getCurrentPosition().getPosition()) > 200)
+        while(290 - (vehicle.getCurrentPosition().getPosition()) > 50)
             Thread.sleep(1000);
         vehicle.initiateAccident();
         Thread.sleep(20000);

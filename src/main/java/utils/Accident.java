@@ -56,13 +56,13 @@ public class Accident {
         // Generate random plate of 4numbers and 3 letters
         String plate = String.format("%04d", (int)(Math.random() * 10000)) + (char)(Math.random() * 26 + 'A') + (char)(Math.random() * 26 + 'A') + (char)(Math.random() * 26 + 'A');
         RoadPoint start = new RoadPoint(this.accidentSegment, 0);
-        SpecialVehicle vehicle = new SpecialVehicle(plate, role, 80, start, GlobalVars.AWS_ENDPOINT, GlobalVars.VE_CERTIFICATE, GlobalVars.VE_KEY);
+        SpecialVehicle vehicle = new SpecialVehicle(plate, role, 60, start, GlobalVars.AWS_ENDPOINT, GlobalVars.VE_CERTIFICATE, GlobalVars.VE_KEY);
 
         Route route = new Route();
         // Route the vehicle to the accident location
         route.addRouteFragment(this.accidentSegment, 0, this.accidentPosition);
         // Route the vehicle to the back to the beginning of the road
-        route.addRouteFragment(this.accidentSegment, this.accidentPosition, 0);
+        // route.addRouteFragment(this.accidentSegment, this.accidentPosition, 0);
         try {
             vehicle.setRoute(route);
             vehicle.startRoute();
